@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Bell, ChevronDown, Download, Settings, Wifi, WifiOff, Moon, Sun } from 'lucide-react';
+import { Search, Bell, ChevronDown, Menu, Moon, Sun, Download, Settings, Wifi, WifiOff } from 'lucide-react';
 import { COLORS } from '../utils/constants';
 
 interface HeaderProps {
@@ -41,7 +41,7 @@ export const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, isCo
             type="text" 
             placeholder="Search systems..." 
             className="pl-11 pr-4 py-2.5 w-full sm:w-48 md:w-72 border border-slate-300 rounded-lg focus:ring-2 outline-none text-sm transition-all" 
-            style={{ '--tw-ring-color': COLORS.primaryLight }} 
+            style={{ '--tw-ring-color': COLORS.primaryLight } as React.CSSProperties} 
           />
         </div>
 

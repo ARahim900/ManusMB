@@ -1,14 +1,22 @@
 import React from 'react';
 import { Power, Menu, Zap, Droplets, Combine, UserCheck } from 'lucide-react';
 import { COLORS } from '../utils/constants';
+import { MainSection } from '../types';
 
 interface SidebarProps {
-  activeMainSection: string;
-  setActiveMainSection: (section: string) => void;
+  activeMainSection: MainSection;
+  setActiveMainSection: (section: MainSection) => void;
   isCollapsed: boolean;
   toggleSidebar: () => void;
   isDarkMode: boolean;
 }
+
+const mainSections = [
+  { name: 'Electricity System', icon: Zap, sectionId: 'ElectricitySystem' as MainSection },
+  { name: 'Water Analysis', icon: Droplets, sectionId: 'WaterAnalysis' as MainSection },
+  { name: 'STP Plant', icon: Combine, sectionId: 'STPPlant' as MainSection },
+  { name: 'Contractor Tracker', icon: UserCheck, sectionId: 'ContractorTracker' as MainSection },
+];
 
 export const Sidebar: React.FC<SidebarProps> = ({
   activeMainSection,
@@ -17,13 +25,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   toggleSidebar,
   isDarkMode
 }) => {
-  const mainSections = [
-    { name: 'Electricity System', icon: Zap, sectionId: 'ElectricitySystem' },
-    { name: 'Water Analysis', icon: Droplets, sectionId: 'WaterAnalysis' },
-    { name: 'STP Plant', icon: Combine, sectionId: 'STPPlant' },
-    { name: 'Contractor Tracker', icon: UserCheck, sectionId: 'ContractorTracker' },
-  ];
-
   return (
     <div 
       className={`${isCollapsed ? 'w-16' : 'w-64'} text-slate-100 p-5 space-y-8 min-h-screen shadow-2xl print:hidden transition-all duration-300 ease-in-out relative`} 
