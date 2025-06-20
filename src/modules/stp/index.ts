@@ -1,0 +1,1 @@
+export { STPPlantModule } from './STPPlantModule';
