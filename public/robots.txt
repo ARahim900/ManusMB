@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://muscatbay-management.netlify.app/sitemap.xml 

@@ -1,0 +1,412 @@
+/* Tailwind CSS imports */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom CSS variables for Muscat Bay theme */
+:root {
+  --radius: 0.625rem;
+  
+  /* Muscat Bay Brand Colors */
+  --muscat-primary: #5f5168;
+  --muscat-white: #ffffff;
+  --muscat-white-pink: #fffeff;
+  --muscat-white-yellow: #fffffd;
+  --muscat-white-blue: #feffff;
+  --muscat-teal: #A8D5E3;
+  --muscat-teal-light: #C3FBF4;
+  --muscat-gold: #BFA181;
+  --muscat-cream: #F2F0EA;
+  --muscat-navy: #0A1828;
+  --muscat-navy-alt: #002349;
+  
+  /* Sidebar Colors (Using Muscat Bay theme) */
+  --sidebar-bg: #3a3142;                    /* Darker variant of primary */
+  --sidebar-text: var(--muscat-white);
+  --sidebar-text-muted: #a8a3b8;
+  --sidebar-hover: #4a4055;                 /* Slightly lighter than bg */
+  --sidebar-active: var(--muscat-primary);  /* Main brand color */
+  
+  /* App Layout Colors */
+  --app-background: var(--muscat-white-blue);
+  --header-bg: var(--muscat-white);
+  --content-bg: var(--muscat-white);
+  --border-color: #e8e5eb;                  /* Subtle tint of primary */
+  --text-primary: var(--muscat-navy);
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  
+  /* Module-Specific Themes (Updated with Muscat Bay colors) */
+  --electricity-primary: var(--muscat-primary);
+  --electricity-light: var(--muscat-white-pink);
+  --electricity-accent: var(--muscat-gold);
+  
+  --water-primary: var(--muscat-teal);
+  --water-light: var(--muscat-teal-light);
+  --water-accent: var(--muscat-navy);
+  --water-success: #10b981;
+  --water-warning: var(--muscat-gold);
+  --water-danger: #ef4444;
+  
+  --stp-primary: var(--muscat-teal);
+  --stp-light: var(--muscat-teal-light);
+  --stp-accent: var(--muscat-navy);
+  
+  --reserve-primary: var(--muscat-gold);
+  --reserve-light: var(--muscat-cream);
+  --reserve-accent: var(--muscat-primary);
+  
+  --contractor-primary: var(--muscat-navy);
+  --contractor-light: var(--muscat-white-yellow);
+  --contractor-accent: var(--muscat-teal);
+  
+  /* Status & Alert Colors (Harmonized with brand) */
+  --success: #10b981;
+  --warning: var(--muscat-gold);
+  --danger: #ef4444;
+  --info: var(--muscat-teal);
+  
+  /* Chart Colors (Using Muscat Bay palette) */
+  --chart-color-1: var(--muscat-primary);
+  --chart-color-2: var(--muscat-teal);
+  --chart-color-3: var(--muscat-gold);
+  --chart-color-4: var(--muscat-navy);
+  --chart-color-5: var(--muscat-teal-light);
+  --chart-color-6: #8a7a94;
+  
+  /* Basic colors (Updated for consistency) */
+  --background: var(--muscat-white);
+  --foreground: var(--muscat-navy);
+  --card: var(--muscat-white);
+  --card-foreground: var(--muscat-navy);
+  --primary: var(--muscat-primary);
+  --primary-foreground: var(--muscat-white);
+  --secondary: var(--muscat-cream);
+  --secondary-foreground: var(--muscat-navy);
+  --muted: var(--muscat-white-pink);
+  --muted-foreground: #64748b;
+  --accent: var(--muscat-teal-light);
+  --accent-foreground: var(--muscat-navy);
+  --destructive: #ef4444;
+  --border: var(--border-color);
+  --input: var(--border-color);
+  --ring: var(--muscat-primary);
+}
+
+/* Base styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  background-color: var(--app-background);
+  color: var(--text-primary);
+}
+
+/* Custom component styles */
+.sidebar {
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+}
+
+.sidebar-nav-item {
+  color: var(--sidebar-text-muted);
+  transition: all 0.2s ease;
+}
+
+.sidebar-nav-item:hover {
+  background: var(--sidebar-hover);
+  color: var(--sidebar-text);
+}
+
+.sidebar-nav-item.active {
+  background: var(--sidebar-active);
+  color: var(--sidebar-text);
+  border-right: 3px solid var(--muscat-teal);
+}
+
+.metric-card {
+  background: var(--content-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(95, 81, 104, 0.1);
+  transition: all 0.2s ease;
+}
+
+.metric-card:hover {
+  box-shadow: 0 4px 12px rgba(95, 81, 104, 0.15);
+  transform: translateY(-2px);
+  border-color: var(--muscat-primary);
+}
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.header {
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.content-area {
+  background: var(--app-background);
+  padding: 2rem;
+}
+
+.electricity-module {
+  --module-primary: var(--electricity-primary);
+  --module-light: var(--electricity-light);
+  --module-accent: var(--electricity-accent);
+}
+
+.water-module {
+  --module-primary: var(--water-primary);
+  --module-light: var(--water-light);
+  --module-accent: var(--water-accent);
+}
+
+.stp-module {
+  --module-primary: var(--stp-primary);
+  --module-light: var(--stp-light);
+  --module-accent: var(--stp-accent);
+}
+
+.reserve-module {
+  --module-primary: var(--reserve-primary);
+  --module-light: var(--reserve-light);
+  --module-accent: var(--reserve-accent);
+}
+
+.contractor-module {
+  --module-primary: var(--contractor-primary);
+  --module-light: var(--contractor-light);
+  --module-accent: var(--contractor-accent);
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Enhanced responsive grid system */
+@media (min-width: 640px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .metrics-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .metrics-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .metrics-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+  }
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .charts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .charts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 767px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  
+  .main-content {
+    margin-left: 0;
+  }
+}
+
+@media (min-width: 768px) {
+  .sidebar {
+    position: relative;
+    transform: translateX(0);
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  
+  .main-content {
+    margin-left: 0;
+  }
+}
+
+/* Additional Muscat Bay themed utilities */
+.btn-muscat-primary {
+  background-color: var(--muscat-primary);
+  color: var(--muscat-white);
+  border: 1px solid var(--muscat-primary);
+  transition: all 0.2s ease;
+}
+
+.btn-muscat-primary:hover {
+  background-color: #4a4055;
+  border-color: #4a4055;
+}
+
+.btn-muscat-secondary {
+  background-color: var(--muscat-teal);
+  color: var(--muscat-navy);
+  border: 1px solid var(--muscat-teal);
+  transition: all 0.2s ease;
+}
+
+.btn-muscat-secondary:hover {
+  background-color: var(--muscat-teal-light);
+  border-color: var(--muscat-teal-light);
+}
+
+.text-muscat-primary {
+  color: var(--muscat-primary);
+}
+
+.text-muscat-navy {
+  color: var(--muscat-navy);
+}
+
+.bg-muscat-gradient {
+  background: linear-gradient(135deg, var(--muscat-primary) 0%, var(--muscat-teal) 100%);
+}
+
+.border-muscat {
+  border-color: var(--muscat-primary);
+}
+
+/* Performance optimizations */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Smooth scrolling for better UX */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus styles for accessibility */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--muscat-primary);
+  outline-offset: 2px;
+}
+
+/* Loading states */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Mobile-first responsive utilities */
+.container {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding: 0 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding: 0 2rem;
+  }
+}
+
+/* Print styles */
+@media print {
+  .sidebar,
+  .header {
+    display: none !important;
+  }
+  
+  .main-content {
+    margin: 0 !important;
+    width: 100% !important;
+  }
+  
+  .metric-card {
+    break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .metric-card {
+    border-width: 2px;
+  }
+  
+  .btn-muscat-primary {
+    border-width: 2px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
