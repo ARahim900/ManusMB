@@ -115,30 +115,29 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="p-4 md:p-6 space-y-6">
+    <div className="py-4 px-1 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
         <div>
           <h1 
-            className="text-2xl md:text-3xl font-bold mb-2"
+            className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2 leading-tight"
             style={{ color: 'var(--muscat-navy)' }}
           >
             Muscat Bay Management System
           </h1>
-          <p style={{ color: 'var(--text-secondary)' }}>
+          <p className="text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>
             Welcome back! Here's what's happening with your systems today.
           </p>
         </div>
         
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mt-4 sm:mt-0">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
           <div 
-            className="text-sm"
+            className="text-xs sm:text-sm bg-gray-50 px-2 py-1 rounded"
             style={{ color: 'var(--text-secondary)' }}
           >
             {currentTime.toLocaleString('en-US', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
+              weekday: 'short',
+              month: 'short',
               day: 'numeric',
               hour: '2-digit',
               minute: '2-digit'
@@ -148,7 +147,7 @@ const Dashboard = () => {
       </div>
 
       {/* Key Metrics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
         {overviewMetrics.map((metric, index) => (
           <Link key={index} to={metric.path} className="block group">
             <div className="metric-card group-hover:scale-105 transition-transform duration-200">
@@ -168,7 +167,7 @@ const Dashboard = () => {
       </div>
 
       {/* Alerts and Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* System Alerts */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg border shadow-sm">

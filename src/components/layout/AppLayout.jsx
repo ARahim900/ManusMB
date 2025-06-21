@@ -45,7 +45,7 @@ const AppLayout = ({ children }) => {
         
         {/* Content Area */}
         <main className="flex-1 overflow-auto content-area">
-          <div className="container mx-auto max-w-7xl">
+          <div className="w-full px-2 sm:px-4 md:px-6 lg:px-8 max-w-7xl mx-auto">
             {children}
           </div>
         </main>

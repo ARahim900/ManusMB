@@ -117,7 +117,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       </div>
 
       {/* Mobile Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-72 sidebar transform transition-transform duration-300 ease-in-out md:hidden ${
+      <div className={`fixed inset-y-0 left-0 z-50 w-72 sm:w-80 sidebar transform transition-transform duration-300 ease-in-out md:hidden ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         {/* Close Button */}
@@ -147,7 +147,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                 key={item.path}
                 to={item.path}
                 onClick={onClose}
-                className={`sidebar-nav-item flex items-center px-4 py-3 rounded-lg group ${
+                className={`sidebar-nav-item flex items-center px-4 py-4 rounded-lg group ${
                   isActive ? 'active' : ''
                 }`}
               >

@@ -4,14 +4,14 @@ import { Button } from '@/components/ui/button';
 
 const TopHeader = ({ onMenuClick }) => {
   return (
-    <header className="header flex items-center justify-between h-16 px-6 shadow-sm">
+    <header className="header flex items-center justify-between h-14 sm:h-16 px-3 sm:px-4 md:px-6 shadow-sm">
       {/* Left Section */}
       <div className="flex items-center">
         {/* Mobile Menu Button */}
         <Button
           variant="ghost"
           size="sm"
-          className="md:hidden mr-2"
+          className="md:hidden mr-1 sm:mr-2 p-2"
           onClick={onMenuClick}
         >
           <Menu className="w-5 h-5" style={{ color: 'var(--muscat-primary)' }} />
@@ -26,7 +26,7 @@ const TopHeader = ({ onMenuClick }) => {
       </div>
 
       {/* Right Section */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-4">
         {/* Search */}
         <div className="hidden md:flex items-center">
           <div className="relative">
@@ -62,12 +62,12 @@ const TopHeader = ({ onMenuClick }) => {
         </Button>
 
         {/* User Avatar */}
-        <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+        <Button variant="ghost" size="sm" className="flex items-center space-x-1 sm:space-x-2 p-1 sm:p-2">
           <div 
-            className="w-8 h-8 rounded-full flex items-center justify-center"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center"
             style={{ backgroundColor: 'var(--muscat-teal-light)' }}
           >
-            <User className="w-4 h-4" style={{ color: 'var(--muscat-primary)' }} />
+            <User className="w-3 h-3 sm:w-4 sm:h-4" style={{ color: 'var(--muscat-primary)' }} />
           </div>
           <span className="hidden md:block text-sm font-medium" style={{ color: 'var(--muscat-navy)' }}>Admin</span>
         </Button>

@@ -241,7 +241,7 @@ body {
   }
 }
 
-/* Responsive Design */
+/* Enhanced Mobile Responsive Design */
 @media (max-width: 767px) {
   .sidebar {
     transform: translateX(-100%);
@@ -254,6 +254,56 @@ body {
   
   .main-content {
     margin-left: 0;
+  }
+  
+  /* Mobile-specific optimizations */
+  .content-area {
+    padding: 0.5rem;
+  }
+  
+  .metric-card {
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  /* Better touch targets for mobile */
+  button, .metric-card, a {
+    min-height: 44px;
+  }
+  
+  /* Optimize text for mobile reading */
+  h1, h2, h3 {
+    line-height: 1.2;
+  }
+  
+  /* Mobile navigation improvements */
+  .sidebar {
+    width: 280px;
+  }
+  
+  /* Mobile overflow handling */
+  .dashboard-container {
+    overflow-x: hidden;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 375px) {
+  .content-area {
+    padding: 0.25rem;
+  }
+  
+  .metric-card {
+    padding: 0.75rem;
+  }
+  
+  /* Smaller text on very small screens */
+  h1 {
+    font-size: 1.25rem;
+  }
+  
+  .sidebar {
+    width: 260px;
   }
 }
 

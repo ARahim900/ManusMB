@@ -12,16 +12,16 @@ const MetricCard = ({
 }) => {
   return (
     <Card className="metric-card">
-      <CardContent className="p-6">
+      <CardContent className="p-4 sm:p-6">
         <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>{title}</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs sm:text-sm font-medium mb-1 truncate" style={{ color: 'var(--text-secondary)' }}>{title}</p>
             <div className="flex items-baseline">
-              <span className="text-2xl font-bold" style={{ color: 'var(--muscat-navy)' }}>{value}</span>
-              {unit && <span className="ml-1 text-sm" style={{ color: 'var(--text-muted)' }}>{unit}</span>}
+              <span className="text-xl sm:text-2xl font-bold" style={{ color: 'var(--muscat-navy)' }}>{value}</span>
+              {unit && <span className="ml-1 text-xs sm:text-sm" style={{ color: 'var(--text-muted)' }}>{unit}</span>}
             </div>
             {subtitle && (
-              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{subtitle}</p>
+              <p className="text-xs mt-1 truncate" style={{ color: 'var(--text-muted)' }}>{subtitle}</p>
             )}
             {trend && (
               <div className={`flex items-center mt-2 text-xs ${
@@ -34,10 +34,10 @@ const MetricCard = ({
           </div>
           {Icon && (
             <div 
-              className={`w-12 h-12 rounded-full flex items-center justify-center ${iconColor}`}
+              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 ml-2 ${iconColor}`}
               style={{ backgroundColor: 'var(--muscat-teal-light)' }}
             >
-              <Icon className="w-6 h-6" />
+              <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
           )}
         </div>
