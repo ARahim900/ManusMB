@@ -89,7 +89,7 @@ const WaterAnalysisModule = () => {
 
   // Monthly trend data for water flow - A1, A2, A3 levels
   const monthlyWaterTrendData = useMemo(() => {
-    return waterMonthsAvailable.map(month => {
+    const data = waterMonthsAvailable.map(month => {
       const A1_supply = getA1Supply(month);
       const A2_total = getA2Total(month);
       const A3_total = getA3Total(month);
@@ -102,6 +102,8 @@ const WaterAnalysisModule = () => {
         'Water Loss': A1_supply - A3_total
       };
     });
+    
+    return data;
   }, []);
 
   // Zone-wise consumption data
@@ -279,64 +281,6 @@ Total System Loss: Overall water loss calculation with efficiency metrics
     );
   };
 
-  // Water Filter Bar
-  const WaterFilterBar = () => {
-    const monthOptions = waterMonthsAvailable.map(m => ({ value: m, label: m }));
-    const distinctZones = [...new Set(waterSystemData.map(item => item.zone))].filter(zone => zone !== 'MAIN');
-    const zoneOptions = [{ value: 'All Zones', label: 'All Zones' }, ...distinctZones.map(z => ({ value: z, label: z }))];
-    
-    return (
-      <div className="bg-white shadow p-4 rounded-lg mb-6 print:hidden border border-slate-200">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Select Month</label>
-            <div className="relative">
-              <select 
-                value={selectedWaterMonth} 
-                onChange={(e) => setSelectedWaterMonth(e.target.value)} 
-                className="appearance-none w-full p-2.5 pr-10 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:outline-none bg-white text-slate-700"
-              >
-                {monthOptions.map(option => ( 
-                  <option key={option.value} value={option.value}>{option.label}</option> 
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
-                <CalendarDays size={16} />
-              </div>
-            </div>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Filter by Zone</label>
-            <div className="relative">
-              <select 
-                value={selectedZone} 
-                onChange={(e) => setSelectedZone(e.target.value)} 
-                className="appearance-none w-full p-2.5 pr-10 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:outline-none bg-white text-slate-700"
-              >
-                {zoneOptions.map(option => ( 
-                  <option key={option.value} value={option.value}>{option.label}</option> 
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
-                <Building size={16} />
-              </div>
-            </div>
-          </div>
-          
-          <button 
-            onClick={() => { setSelectedWaterMonth('May-25'); setSelectedZone('All Zones'); }} 
-            className="text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 h-[46px] w-full lg:w-auto hover:shadow-lg" 
-            style={{ backgroundColor: COLORS.primaryDark }} 
-          > 
-            <Filter size={16}/> 
-            <span>Reset Filters</span> 
-          </button>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="space-y-6 p-6 bg-slate-50 min-h-screen">
       {/* Header */}
@@ -346,7 +290,6 @@ Total System Loss: Overall water loss calculation with efficiency metrics
       </div>
 
       <WaterSubNav />
-      <WaterFilterBar />
 
       {activeWaterSubSection === 'Overview' && (
         <>
@@ -434,9 +377,9 @@ Total System Loss: Overall water loss calculation with efficiency metrics
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="A1" stroke={COLORS.info} name="A1 - Main Source (m³)" strokeWidth={3} />
-                  <Line type="monotone" dataKey="A2" stroke={COLORS.warning} name="A2 - Primary Distribution (m³)" strokeWidth={3} />
-                  <Line type="monotone" dataKey="A3" stroke={COLORS.success} name="A3 - End-User Consumption (m³)" strokeWidth={3} />
+                  <Line type="monotone" dataKey="A1 - Main Source (NAMA)" stroke={COLORS.info} name="A1 - Main Source (m³)" strokeWidth={3} />
+                  <Line type="monotone" dataKey="A2 - Primary Distribution (L2+DC)" stroke={COLORS.warning} name="A2 - Primary Distribution (m³)" strokeWidth={3} />
+                  <Line type="monotone" dataKey="A3 - End-User Consumption (L3+DC)" stroke={COLORS.success} name="A3 - End-User Consumption (m³)" strokeWidth={3} />
                 </LineChart>
               </ResponsiveContainer>
             </ChartCard>
@@ -503,91 +446,225 @@ Total System Loss: Overall water loss calculation with efficiency metrics
 
       {activeWaterSubSection === 'WaterLoss' && (
         <>
-          {/* Water Loss Analysis */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Water Loss Filter Bar */}
+          <div className="bg-white shadow p-4 rounded-lg mb-6 print:hidden border border-slate-200">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Select Month for Analysis</label>
+                <div className="relative">
+                  <select 
+                    value={selectedWaterMonth} 
+                    onChange={(e) => setSelectedWaterMonth(e.target.value)} 
+                    className="appearance-none w-full p-2.5 pr-10 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:outline-none bg-white text-slate-700"
+                  >
+                    {waterMonthsAvailable.map(month => ( 
+                      <option key={month} value={month}>{month}</option> 
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                    <CalendarDays size={16} />
+                  </div>
+                </div>
+              </div>
+              
+              <button 
+                onClick={() => setSelectedWaterMonth('May-25')} 
+                className="text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 h-[46px] w-full sm:w-auto hover:shadow-lg" 
+                style={{ backgroundColor: COLORS.primaryDark }} 
+              > 
+                <Filter size={16}/> 
+                <span>Reset to Latest</span> 
+              </button>
+            </div>
+          </div>
+
+          {/* Water Loss Analysis Header */}
+          <div className="mb-6 text-center">
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">Water Loss Analysis for {selectedWaterMonth}</h2>
+            <p className="text-slate-600">Comprehensive analysis of water distribution efficiency and system losses</p>
+          </div>
+
+          {/* Water Loss Analysis Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             <MetricCard 
-              title="Stage 1 Analysis" 
+              title="System Efficiency" 
+              value={waterCalculations.systemEfficiency.toFixed(1)} 
+              unit="%" 
+              icon={CheckCircle} 
+              subtitle="Overall system performance" 
+              iconColor="text-green-600" 
+            />
+            <MetricCard 
+              title="Stage 1 Loss" 
               value={Math.abs(waterCalculations.stage1Loss).toFixed(0)} 
               unit="m³" 
               icon={AlertCircle} 
-              subtitle={waterCalculations.stage1Loss < 0 ? "Measurement Variance" : "Trunk Main Loss"} 
+              subtitle={waterCalculations.stage1Loss < 0 ? "Meter Variance" : "Trunk Main Loss"} 
               iconColor={waterCalculations.stage1Loss < 0 ? "text-orange-600" : "text-red-600"} 
             />
             <MetricCard 
-              title="Stage 2 Loss (Distribution)" 
-              value={waterCalculations.stage2Loss.toFixed(0)} 
+              title="Stage 2 Loss" 
+              value={Math.abs(waterCalculations.stage2Loss).toFixed(0)} 
               unit="m³" 
               icon={TrendingUp} 
-              subtitle={`${waterCalculations.stage2LossPercent.toFixed(1)}% within zones`} 
+              subtitle="Within zone distribution" 
               iconColor="text-orange-600" 
             />
             <MetricCard 
-              title="Total System Performance" 
+              title="Total System Loss" 
               value={Math.abs(waterCalculations.totalLoss).toFixed(0)} 
               unit="m³" 
               icon={Droplets} 
               subtitle={`${Math.abs(waterCalculations.totalLossPercent).toFixed(1)}% total variance`} 
-              iconColor="text-green-600" 
+              iconColor={Math.abs(waterCalculations.totalLossPercent) > 15 ? "text-red-600" : "text-yellow-600"} 
             />
           </div>
 
+          {/* Water Loss Breakdown Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {/* Loss Percentage Breakdown */}
+            <ChartCard title="Water Loss Breakdown" subtitle="Percentage distribution of losses">
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={[
+                      { 
+                        name: 'Revenue Water (A3)', 
+                        value: waterCalculations.A3_total, 
+                        fill: COLORS.success 
+                      },
+                      { 
+                        name: waterCalculations.stage1Loss < 0 ? 'Meter Variance' : 'Stage 1 Loss', 
+                        value: Math.abs(waterCalculations.stage1Loss), 
+                        fill: waterCalculations.stage1Loss < 0 ? COLORS.warning : COLORS.error 
+                      },
+                      { 
+                        name: 'Stage 2 Loss', 
+                        value: Math.abs(waterCalculations.stage2Loss), 
+                        fill: COLORS.accent 
+                      }
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    dataKey="value"
+                    label={({name, percent}) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                  >
+                  </Pie>
+                  <Tooltip formatter={(value) => `${value.toLocaleString()} m³`} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </ChartCard>
+
+            {/* Monthly Loss Trend */}
+            <ChartCard title="Monthly Loss Trend" subtitle="Water loss patterns over time">
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={monthlyWaterTrendData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="Water Loss" 
+                    stroke={COLORS.error} 
+                    name="Total Water Loss (m³)" 
+                    strokeWidth={3} 
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </ChartCard>
+          </div>
+
           {/* Water Balance Diagram */}
-          <ChartCard title="Water System Balance Analysis" subtitle={`Real data hierarchical flow for ${selectedWaterMonth}`}>
+          <ChartCard title="Water System Balance Analysis" subtitle={`Hierarchical flow analysis for ${selectedWaterMonth}`}>
             <div className="space-y-6 p-4">
               {/* Level A1 */}
               <div className="text-center">
-                <div className="inline-block bg-blue-100 p-4 rounded-lg border-2 border-blue-300">
-                  <h3 className="font-bold text-blue-800">A1 - Main Bulk (NAMA)</h3>
-                  <p className="text-2xl font-bold text-blue-900">{waterCalculations.A1_totalSupply.toLocaleString()} m³</p>
+                <div className="inline-block bg-blue-100 p-6 rounded-lg border-2 border-blue-300">
+                  <h3 className="font-bold text-blue-800 text-lg">A1 - Main Source (NAMA)</h3>
+                  <p className="text-3xl font-bold text-blue-900">{waterCalculations.A1_totalSupply.toLocaleString()} m³</p>
                   <p className="text-sm text-blue-700">Total Water Supply</p>
                 </div>
               </div>
 
-              {/* Arrow and Analysis */}
+              {/* Stage 1 Analysis */}
               <div className="text-center">
-                <div className="flex items-center justify-center space-x-4">
-                  <div className={`text-sm ${waterCalculations.stage1Loss < 0 ? 'text-orange-600' : 'text-red-600'}`}>
-                    <span className="font-semibold">Stage 1 Analysis:</span> {Math.abs(waterCalculations.stage1Loss).toFixed(0)} m³ 
-                    ({Math.abs(waterCalculations.stage1LossPercent).toFixed(1)}%)
-                    {waterCalculations.stage1Loss < 0 && <div className="text-xs">*Meter reading variance</div>}
+                <div className="flex items-center justify-center space-x-4 mb-4">
+                  <div className={`text-center p-4 rounded-lg border-2 ${waterCalculations.stage1Loss < 0 ? 'bg-orange-50 border-orange-300' : 'bg-red-50 border-red-300'}`}>
+                    <div className={`text-lg font-semibold ${waterCalculations.stage1Loss < 0 ? 'text-orange-800' : 'text-red-800'}`}>
+                      Stage 1 Analysis
+                    </div>
+                    <div className={`text-2xl font-bold ${waterCalculations.stage1Loss < 0 ? 'text-orange-900' : 'text-red-900'}`}>
+                      {Math.abs(waterCalculations.stage1Loss).toFixed(0)} m³
+                    </div>
+                    <div className={`text-sm ${waterCalculations.stage1Loss < 0 ? 'text-orange-700' : 'text-red-700'}`}>
+                      {Math.abs(waterCalculations.stage1LossPercent).toFixed(1)}% of A1 Supply
+                    </div>
+                    {waterCalculations.stage1Loss < 0 && (
+                      <div className="text-xs text-orange-600 mt-1">*Indicates meter reading variance</div>
+                    )}
                   </div>
                 </div>
-                <div className="text-center text-slate-400 text-2xl">↓</div>
+                <div className="text-center text-slate-400 text-3xl">↓</div>
               </div>
 
               {/* Level A2 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="text-center">
-                  <div className="bg-yellow-100 p-4 rounded-lg border-2 border-yellow-300">
-                    <h3 className="font-bold text-yellow-800">Zone Bulk Meters (L2)</h3>
-                    <p className="text-xl font-bold text-yellow-900">{waterCalculations.L2_total.toLocaleString()} m³</p>
+                  <div className="bg-yellow-100 p-6 rounded-lg border-2 border-yellow-300">
+                    <h3 className="font-bold text-yellow-800 text-lg">Zone Bulk Meters (L2)</h3>
+                    <p className="text-2xl font-bold text-yellow-900">{waterCalculations.L2_total.toLocaleString()} m³</p>
                     <p className="text-sm text-yellow-700">{waterCalculations.zoneBulkMeters.length} Zone Meters</p>
+                    <p className="text-xs text-yellow-600 mt-1">
+                      {((waterCalculations.L2_total / waterCalculations.A1_totalSupply) * 100).toFixed(1)}% of A1 Supply
+                    </p>
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="bg-purple-100 p-4 rounded-lg border-2 border-purple-300">
-                    <h3 className="font-bold text-purple-800">Direct Connections (DC)</h3>
-                    <p className="text-xl font-bold text-purple-900">{waterCalculations.DC_total.toLocaleString()} m³</p>
+                  <div className="bg-purple-100 p-6 rounded-lg border-2 border-purple-300">
+                    <h3 className="font-bold text-purple-800 text-lg">Direct Connections (DC)</h3>
+                    <p className="text-2xl font-bold text-purple-900">{waterCalculations.DC_total.toLocaleString()} m³</p>
                     <p className="text-sm text-purple-700">{waterCalculations.directConnections.length} DC Meters</p>
+                    <p className="text-xs text-purple-600 mt-1">
+                      {((waterCalculations.DC_total / waterCalculations.A1_totalSupply) * 100).toFixed(1)}% of A1 Supply
+                    </p>
                   </div>
                 </div>
               </div>
 
               {/* Stage 2 Loss */}
               <div className="text-center">
-                <div className="text-orange-600 text-sm">
-                  <span className="font-semibold">Stage 2 Loss (Within Zones):</span> {waterCalculations.stage2Loss.toFixed(0)} m³ 
-                  ({waterCalculations.stage2LossPercent.toFixed(1)}%)
+                <div className="inline-block bg-orange-50 p-4 rounded-lg border-2 border-orange-300">
+                  <div className="text-lg font-semibold text-orange-800">Stage 2 Loss (Within Zones)</div>
+                  <div className="text-2xl font-bold text-orange-900">{Math.abs(waterCalculations.stage2Loss).toFixed(0)} m³</div>
+                  <div className="text-sm text-orange-700">
+                    {Math.abs(waterCalculations.stage2LossPercent).toFixed(1)}% of Zone Bulk Distribution
+                  </div>
                 </div>
-                <div className="text-center text-slate-400 text-2xl">↓</div>
+                <div className="text-center text-slate-400 text-3xl mt-4">↓</div>
               </div>
 
               {/* Level A3 */}
               <div className="text-center">
-                <div className="inline-block bg-green-100 p-4 rounded-lg border-2 border-green-300">
-                  <h3 className="font-bold text-green-800">A3 - Total End-User Consumption</h3>
-                  <p className="text-2xl font-bold text-green-900">{waterCalculations.A3_total.toLocaleString()} m³</p>
-                  <p className="text-sm text-green-700">Revenue Water ({waterCalculations.endUserMeters.length} L3 + {waterCalculations.directConnections.length} DC)</p>
+                <div className="inline-block bg-green-100 p-6 rounded-lg border-2 border-green-300">
+                  <h3 className="font-bold text-green-800 text-lg">A3 - End-User Consumption</h3>
+                  <p className="text-3xl font-bold text-green-900">{waterCalculations.A3_total.toLocaleString()} m³</p>
+                  <div className="grid grid-cols-2 gap-4 mt-2 text-sm text-green-700">
+                    <div>
+                      <p className="font-medium">Individual Meters (L3)</p>
+                      <p className="text-lg font-bold">{waterCalculations.L3_total.toLocaleString()} m³</p>
+                    </div>
+                    <div>
+                      <p className="font-medium">Direct Connections (DC)</p>
+                      <p className="text-lg font-bold">{waterCalculations.DC_total.toLocaleString()} m³</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-green-600 mt-2">
+                    Revenue Water: {waterCalculations.systemEfficiency.toFixed(1)}% of A1 Supply
+                  </p>
                 </div>
               </div>
             </div>
