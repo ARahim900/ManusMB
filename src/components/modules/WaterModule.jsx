@@ -7,7 +7,7 @@ import {
   Droplets, CalendarDays, Building, Filter, CheckCircle, AlertCircle, 
   TrendingUp, Users2, Sparkles, X, LayoutDashboard, BarChart2 
 } from 'lucide-react';
-import { waterSystemData, waterMonthsAvailable } from '@/Database/waterDatabase';
+import { waterSystemData, waterMonthsAvailable } from '../../../Database/waterDatabase.js';
 import MetricCard from '../ui/MetricCard';
 import ChartCard from '../ui/ChartCard';
 import { Button } from '@/components/ui/button';
