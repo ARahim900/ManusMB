@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import MetricCard from '../ui/MetricCard';
-import ChartCard from '../ui/ChartCard';
+import DetailedCard from '../ui/DetailedCard';
+import Button from '../ui/button';
 import LoadingSpinner from '../ui/LoadingSpinner';
-import { Button } from '../ui/button';
 import { 
   Zap, 
   Droplets, 
@@ -35,47 +35,45 @@ const Dashboard = () => {
     };
   }, []);
 
-  // Sample data for overview metrics
-  const overviewMetrics = [
+  // KPI Cards data following components.json specification
+  const kpiCards = [
     {
-      title: 'Total Energy Consumption',
-      value: '1,738,034',
-      unit: 'kWh',
-      subtitle: 'Last 14 months',
-      icon: Zap,
-      iconColor: 'text-muscat-primary',
-      trend: { value: 5.2, direction: 'up' },
-      path: '/electricity'
+      title: "Total Energy Consumption",
+      value: "1,738,034 kWh",
+      isPrimary: true
     },
     {
-      title: 'Water System Efficiency',
-      value: '76.2',
-      unit: '%',
-      subtitle: 'Current month',
-      icon: Droplets,
-      iconColor: 'text-muscat-teal',
-      trend: { value: 2.1, direction: 'down' },
-      path: '/water'
+      title: "Water System Efficiency", 
+      value: "76.2%",
+      isPrimary: false
     },
     {
-      title: 'STP Plant Status',
-      value: 'Online',
-      subtitle: 'All systems operational',
-      icon: CheckCircle,
-      iconColor: 'text-green-500',
-      path: '/stp'
+      title: "Current Balance",
+      value: "$4,836.00",
+      isPrimary: true
     },
     {
-      title: 'Active Contracts',
-      value: '25',
-      unit: 'contracts',
-      subtitle: 'Total value: 5.5M OMR',
-      icon: Users,
-      iconColor: 'text-muscat-gold',
-      path: '/contractor'
+      title: "Active Contracts",
+      value: "25",
+      isPrimary: false
     }
   ];
 
+  // Detailed Card data following components.json specification
+  const detailedCardData = {
+    icon: "🏢",
+    title: "System Overview",
+    mainValue: "$2,850",
+    detailsLink: "See Details >",
+    items: [
+      { label: "Electricity", value: "$1,159" },
+      { label: "Water", value: "$510" },
+      { label: "Maintenance", value: "$340" },
+      { label: "Reserve Fund", value: "$841" }
+    ]
+  };
+
+  // System alerts data
   const systemAlerts = [
     {
       type: 'warning',
@@ -101,9 +99,9 @@ const Dashboard = () => {
   ];
 
   const quickActions = [
-    { label: 'View Reports', icon: BarChart3, action: () => {}, variant: 'default' },
-    { label: 'System Status', icon: Activity, action: () => {}, variant: 'outline' },
-    { label: 'Schedule Maintenance', icon: Calendar, action: () => {}, variant: 'outline' }
+    { label: 'View Reports', icon: <BarChart3 className="w-4 h-4" />, action: () => {}, variant: 'primary' },
+    { label: 'System Status', icon: <Activity className="w-4 h-4" />, action: () => {}, variant: 'secondary' },
+    { label: 'Schedule Maintenance', icon: <Calendar className="w-4 h-4" />, action: () => {}, variant: 'secondary' }
   ];
 
   if (loading) {
@@ -115,26 +113,20 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="py-4 px-1 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
+    <div className="min-h-screen space-y-6">
       {/* Header Section */}
-      <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+      <div className="page-header">
         <div>
-          <h1 
-            className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2 leading-tight"
-            style={{ color: 'var(--muscat-navy)' }}
-          >
+          <h1 className="page-title">
             Muscat Bay Management System
           </h1>
-          <p className="text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>
+          <p className="page-subtitle">
             Welcome back! Here's what's happening with your systems today.
           </p>
         </div>
         
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-          <div 
-            className="text-xs sm:text-sm bg-gray-50 px-2 py-1 rounded"
-            style={{ color: 'var(--text-secondary)' }}
-          >
+        <div className="flex items-center">
+          <div className="btn btn-secondary btn-sm">
             {currentTime.toLocaleString('en-US', {
               weekday: 'short',
               month: 'short',
@@ -146,123 +138,91 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Key Metrics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-        {overviewMetrics.map((metric, index) => (
-          <Link key={index} to={metric.path} className="block group">
-            <div className="metric-card group-hover:scale-105 transition-transform duration-200">
-              <MetricCard {...metric} />
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                <span 
-                  className="text-sm font-medium"
-                  style={{ color: 'var(--muscat-primary)' }}
-                >
-                  View Details
-                </span>
-                <ArrowRight className="w-4 h-4 text-muscat-primary transform group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-          </Link>
+      {/* KPI Cards Grid */}
+      <div className="metrics-grid">
+        {kpiCards.map((card, index) => (
+          <MetricCard
+            key={index}
+            title={card.title}
+            value={card.value}
+            isPrimary={card.isPrimary}
+          />
         ))}
       </div>
 
-      {/* Alerts and Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        {/* System Alerts */}
+      {/* Detailed Card and Quick Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-lg">
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg border shadow-sm">
-            <div className="p-4 md:p-6 border-b">
-              <div className="flex items-center justify-between">
-                <h2 
-                  className="text-lg font-semibold flex items-center"
-                  style={{ color: 'var(--muscat-navy)' }}
-                >
-                  <Bell className="w-5 h-5 mr-2" />
-                  System Alerts
-                </h2>
-                <Button variant="outline" size="sm">
-                  View All
-                </Button>
-              </div>
-            </div>
-            
-            <div className="divide-y">
-              {systemAlerts.map((alert, index) => {
-                const Icon = alert.icon;
-                return (
-                  <div key={index} className="p-4 md:p-6 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-start space-x-3">
-                      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                        alert.type === 'warning' ? 'bg-yellow-100' :
-                        alert.type === 'success' ? 'bg-green-100' :
-                        'bg-blue-100'
-                      }`}>
-                        <Icon className={`w-4 h-4 ${
-                          alert.type === 'warning' ? 'text-yellow-600' :
-                          alert.type === 'success' ? 'text-green-600' :
-                          'text-blue-600'
-                        }`} />
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <p 
-                          className="text-sm font-medium"
-                          style={{ color: 'var(--muscat-navy)' }}
-                        >
-                          {alert.message}
-                        </p>
-                        <p 
-                          className="text-xs mt-1"
-                          style={{ color: 'var(--text-muted)' }}
-                        >
-                          {alert.time}
-                        </p>
-                      </div>
-                      
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        alert.priority === 'high' ? 'bg-red-100 text-red-800' :
-                        alert.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-green-100 text-green-800'
-                      }`}>
-                        {alert.priority}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+          <DetailedCard {...detailedCardData} />
+        </div>
+        
+        <div className="space-y-4">
+          <h2 className="text-h3">
+            Quick Actions
+          </h2>
+          
+          <div className="space-y-2">
+            {quickActions.map((action, index) => (
+              <Button
+                key={index}
+                label={action.label}
+                icon={action.icon}
+                variant={action.variant}
+                action={action.action}
+                className="w-full"
+              />
+            ))}
           </div>
         </div>
+      </div>
 
-        {/* Quick Actions */}
-        <div>
-          <div className="bg-white rounded-lg border shadow-sm">
-            <div className="p-4 md:p-6 border-b">
-              <h2 
-                className="text-lg font-semibold"
-                style={{ color: 'var(--muscat-navy)' }}
+      {/* System Alerts */}
+      <div className="chart-card">
+        <div className="chart-card-header flex items-center justify-between">
+          <h2 className="chart-card-title flex items-center">
+            <Bell className="w-5 h-5 mr-2" />
+            System Alerts
+          </h2>
+          <Button
+            label="View All"
+            variant="secondary"
+            size="sm"
+            action={() => {}}
+          />
+        </div>
+        
+        <div className="space-y-4">
+          {systemAlerts.map((alert, index) => {
+            const Icon = alert.icon;
+            return (
+              <div 
+                key={index} 
+                className="flex items-start space-x-4 p-4 rounded-lg transition-colors hover:bg-gray-50"
               >
-                Quick Actions
-              </h2>
-            </div>
-            
-            <div className="p-4 md:p-6 space-y-3">
-              {quickActions.map((action, index) => {
-                const Icon = action.icon;
-                return (
-                  <Button
-                    key={index}
-                    variant={action.variant}
-                    className="w-full justify-start"
-                    onClick={action.action}
-                  >
-                    <Icon className="w-4 h-4 mr-2" />
-                    {action.label}
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
+                <div 
+                  className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                    alert.type === 'warning' ? 'bg-yellow-100' :
+                    alert.type === 'success' ? 'bg-green-100' :
+                    'bg-blue-100'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 ${
+                    alert.type === 'warning' ? 'text-yellow-600' :
+                    alert.type === 'success' ? 'text-green-600' :
+                    'text-blue-600'
+                  }`} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-body-regular font-medium">
+                    {alert.message}
+                  </p>
+                  <p className="text-body-small mt-1">
+                    {alert.time}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

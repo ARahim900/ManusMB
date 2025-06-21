@@ -1,48 +1,46 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const MetricCard = ({ 
   title, 
   value, 
-  unit, 
-  subtitle, 
-  icon: Icon, 
-  iconColor = 'text-muscat-primary',
-  trend 
+  unit,
+  subtitle,
+  icon: Icon,
+  iconColor,
+  isPrimary = false 
 }) => {
   return (
-    <Card className="metric-card">
-      <CardContent className="p-4 sm:p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex-1 min-w-0">
-            <p className="text-xs sm:text-sm font-medium mb-1 truncate" style={{ color: 'var(--text-secondary)' }}>{title}</p>
-            <div className="flex items-baseline">
-              <span className="text-xl sm:text-2xl font-bold" style={{ color: 'var(--muscat-navy)' }}>{value}</span>
-              {unit && <span className="ml-1 text-xs sm:text-sm" style={{ color: 'var(--text-muted)' }}>{unit}</span>}
-            </div>
-            {subtitle && (
-              <p className="text-xs mt-1 truncate" style={{ color: 'var(--text-muted)' }}>{subtitle}</p>
-            )}
-            {trend && (
-              <div className={`flex items-center mt-2 text-xs ${
-                trend.direction === 'up' ? 'text-green-600' : 'text-red-600'
-              }`}>
-                <span>{trend.direction === 'up' ? '↗' : '↘'}</span>
-                <span className="ml-1">{trend.value}%</span>
-              </div>
-            )}
-          </div>
-          {Icon && (
-            <div 
-              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 ml-2 ${iconColor}`}
-              style={{ backgroundColor: 'var(--muscat-teal-light)' }}
-            >
-              <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
-          )}
+    <div 
+      className={`kpi-card ${isPrimary ? 'primary' : ''}`}
+    >
+      <div className="flex items-start justify-between mb-2">
+        <div className="flex-1">
+          <h3 className="kpi-card-title">
+            {title}
+          </h3>
         </div>
-      </CardContent>
-    </Card>
+        {Icon && (
+          <Icon className={`w-5 h-5 ${iconColor || 'text-gray-400'}`} />
+        )}
+      </div>
+      
+      <div className="flex items-baseline space-x-1">
+        <span className="kpi-card-value">
+          {value}
+        </span>
+        {unit && (
+          <span className={`text-sm font-medium ${isPrimary ? 'text-white opacity-80' : 'text-gray-500'}`}>
+            {unit}
+          </span>
+        )}
+      </div>
+      
+      {subtitle && (
+        <p className={`text-xs mt-1 ${isPrimary ? 'text-white opacity-70' : 'text-gray-500'}`}>
+          {subtitle}
+        </p>
+      )}
+    </div>
   );
 };
 
