@@ -674,11 +674,29 @@ Total System Loss: Overall water loss calculation with efficiency metrics
 
       {activeWaterSubSection === 'ZoneAnalysis' && (
         <>
-          {/* Zone Analysis Filters */}
+          {/* Zone Analysis Filter */}
           <div className="bg-white shadow p-4 rounded-lg mb-6 print:hidden border border-slate-200">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Select Zone for Analysis</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Select Month</label>
+                <div className="relative">
+                  <select 
+                    value={selectedWaterMonth} 
+                    onChange={(e) => setSelectedWaterMonth(e.target.value)} 
+                    className="appearance-none w-full p-2.5 pr-10 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:outline-none bg-white text-slate-700"
+                  >
+                    {waterMonthsAvailable.map(month => ( 
+                      <option key={month} value={month}>{month}</option> 
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                    <CalendarDays size={16} />
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Filter by Zone</label>
                 <div className="relative">
                   <select 
                     value={selectedZoneForAnalysis} 
@@ -695,23 +713,17 @@ Total System Loss: Overall water loss calculation with efficiency metrics
                 </div>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Month</label>
-                <div className="relative">
-                  <select 
-                    value={selectedWaterMonth} 
-                    onChange={(e) => setSelectedWaterMonth(e.target.value)} 
-                    className="appearance-none w-full p-2.5 pr-10 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:outline-none bg-white text-slate-700"
-                  >
-                    {waterMonthsAvailable.map(month => ( 
-                      <option key={month} value={month}>{month}</option> 
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
-                    <CalendarDays size={16} />
-                  </div>
-                </div>
-              </div>
+              <button 
+                onClick={() => {
+                  setSelectedWaterMonth('May-25');
+                  setSelectedZoneForAnalysis('Zone_FM');
+                }} 
+                className="text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 h-[46px] w-full hover:shadow-lg" 
+                style={{ backgroundColor: COLORS.primaryDark }} 
+              > 
+                <Filter size={16}/> 
+                <span>Reset Filters</span> 
+              </button>
             </div>
           </div>
 
