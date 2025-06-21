@@ -79,7 +79,7 @@ const AppLayout = ({ children }) => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: 'var(--muscat-white-blue)' }}>
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--muscat-white-blue)' }}>
       {/* Sidebar */}
       <div
         onMouseEnter={handleSidebarMouseEnter}
@@ -95,9 +95,9 @@ const AppLayout = ({ children }) => {
       </div>
       
       {/* Main Content */}
-      <div className={`flex-1 flex flex-col main-content min-w-0 transition-all duration-300 ease-in-out ${
-        !isMobile && sidebarCollapsed && !isHoveringCollapsed ? 'md:ml-0' : ''
-      }`}>
+      <div className={`transition-all duration-300 ease-in-out ${
+        isMobile ? 'ml-0' : sidebarCollapsed && !isHoveringCollapsed ? 'ml-20' : 'ml-72'
+      }`} style={{ minHeight: '100vh' }}>
         {/* Top Header */}
         <TopHeader 
           onMenuClick={() => setSidebarOpen(true)}
@@ -107,8 +107,8 @@ const AppLayout = ({ children }) => {
         />
         
         {/* Content Area */}
-        <main className="flex-1 overflow-auto content-area">
-          <div className="w-full px-2 sm:px-4 md:px-6 lg:px-8 max-w-7xl mx-auto">
+        <main className="overflow-auto content-area" style={{ minHeight: 'calc(100vh - 64px)' }}>
+          <div className="page-container">
             {children}
           </div>
         </main>
