@@ -61,10 +61,15 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
     <>
       {/* Desktop Sidebar */}
       <div 
-        className={`hidden md:flex md:flex-col fixed left-0 top-0 bottom-0 transition-all duration-300 ease-in-out z-30 ${
+        className={`sidebar-container hidden md:flex md:flex-col transition-all duration-300 ease-in-out ${
           isCollapsed ? 'md:w-20' : 'md:w-72'
         }`}
         style={{
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          bottom: 0,
+          zIndex: 30,
           backgroundColor: '#5f5168',
           color: '#F2F0EA',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
@@ -307,7 +312,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
 
       {/* Mobile Sidebar */}
       <div 
-        className={`fixed top-0 left-0 h-full w-72 z-50 md:hidden transform transition-transform duration-300 ${
+        className={`sidebar-mobile fixed top-0 left-0 w-72 z-50 md:hidden transform transition-transform duration-300 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         style={{
