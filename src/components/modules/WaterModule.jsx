@@ -259,19 +259,20 @@ Total System Loss: Overall water loss calculation with efficiency metrics
     
     return (
       <div className="mb-6 print:hidden flex justify-center">
-        <div className="bg-white shadow-md rounded-full p-1.5 inline-flex space-x-1 border border-slate-200">
+        <div className="bg-white dark:bg-gray-800 shadow-md rounded-full p-1.5 inline-flex space-x-1 border border-slate-200 dark:border-gray-600 transition-colors duration-300">
           {subSections.map((tab) => {
             const isActive = activeWaterSubSection === tab.id;
             return ( 
               <button 
                 key={tab.id} 
                 onClick={() => setActiveWaterSubSection(tab.id)} 
-                className={`px-4 py-2 rounded-full text-sm font-medium flex items-center space-x-2 transition-all duration-200 ease-in-out transform hover:scale-105`} 
-                style={{ backgroundColor: isActive ? COLORS.primary : 'transparent', color: isActive ? 'white' : COLORS.primaryDark }} 
-                onMouseOver={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = COLORS.primaryLight; if(!isActive) e.currentTarget.style.color = 'white';}} 
-                onMouseOut={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = 'transparent'; if(!isActive) e.currentTarget.style.color = COLORS.primaryDark;}}
+                className={`px-4 py-2 rounded-full text-sm font-medium flex items-center space-x-2 transition-all duration-200 ease-in-out transform hover:scale-105 ${
+                  isActive 
+                    ? 'bg-primary text-white dark:bg-blue-600' 
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
               > 
-                <tab.icon size={18} style={{ color: isActive ? 'white' : COLORS.primary }}/> 
+                <tab.icon size={18} className={isActive ? 'text-white' : 'text-primary dark:text-blue-400'}/> 
                 <span>{tab.name}</span> 
               </button> 
             );
@@ -282,11 +283,11 @@ Total System Loss: Overall water loss calculation with efficiency metrics
   };
 
   return (
-    <div className="space-y-6 p-6 bg-slate-50 min-h-screen">
+    <div className="space-y-6 p-6 bg-background-primary dark:bg-gray-900 min-h-screen transition-colors duration-300">
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-slate-800 mb-2">Muscat Bay Water Analysis System</h1>
-        <p className="text-slate-600">Real Hierarchical Water Distribution Monitoring & Loss Analysis</p>
+        <h1 className="text-3xl font-bold text-primary dark:text-white mb-2 transition-colors duration-300">Muscat Bay Water Analysis System</h1>
+        <p className="text-secondary dark:text-gray-300 transition-colors duration-300">Real Hierarchical Water Distribution Monitoring & Loss Analysis</p>
       </div>
 
       <WaterSubNav />
@@ -307,7 +308,7 @@ Total System Loss: Overall water loss calculation with efficiency metrics
 
           {/* First Layer KPI Cards - A1, A2, A3 Levels */}
           <div className="mb-4">
-            <h2 className="text-lg font-semibold text-slate-700 mb-4">Water System Hierarchy Levels</h2>
+            <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4 transition-colors duration-300">Water System Hierarchy Levels</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <MetricCard 
                 title="A1 - Main Source (L1)" 
@@ -338,7 +339,7 @@ Total System Loss: Overall water loss calculation with efficiency metrics
 
           {/* Second Layer KPI Cards - Loss Analysis */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-slate-700 mb-4">Water Loss Analysis</h2>
+            <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4 transition-colors duration-300">Water Loss Analysis</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <MetricCard 
                 title="Stage 1 Loss (Trunk Main)" 
@@ -401,36 +402,36 @@ Total System Loss: Overall water loss calculation with efficiency metrics
           <ChartCard title="Top Water Consumers" subtitle={`Highest consumption for ${selectedWaterMonth}`}>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-slate-50">
+                <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
-                    <th className="text-left p-3 font-semibold text-slate-700">Rank</th>
-                    <th className="text-left p-3 font-semibold text-slate-700">Meter Label</th>
-                    <th className="text-left p-3 font-semibold text-slate-700">Type</th>
-                    <th className="text-left p-3 font-semibold text-slate-700">Zone</th>
-                    <th className="text-right p-3 font-semibold text-slate-700">Consumption (m³)</th>
-                    <th className="text-center p-3 font-semibold text-slate-700">Level</th>
+                    <th className="text-left p-3 font-semibold text-gray-700 dark:text-gray-200">Rank</th>
+                    <th className="text-left p-3 font-semibold text-gray-700 dark:text-gray-200">Meter Label</th>
+                    <th className="text-left p-3 font-semibold text-gray-700 dark:text-gray-200">Type</th>
+                    <th className="text-left p-3 font-semibold text-gray-700 dark:text-gray-200">Zone</th>
+                    <th className="text-right p-3 font-semibold text-gray-700 dark:text-gray-200">Consumption (m³)</th>
+                    <th className="text-center p-3 font-semibold text-gray-700 dark:text-gray-200">Level</th>
                   </tr>
                 </thead>
                 <tbody>
                   {topWaterConsumers.map((consumer, index) => (
-                    <tr key={index} className="border-b border-slate-100 hover:bg-slate-50">
+                    <tr key={index} className="border-b border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
                       <td className="p-3">
                         <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white ${
-                          index < 3 ? 'bg-yellow-500' : 'bg-slate-400'
+                          index < 3 ? 'bg-yellow-500' : 'bg-gray-400'
                         }`}>
                           {index + 1}
                         </span>
                       </td>
-                      <td className="p-3 font-medium text-slate-800">{consumer.name}</td>
-                      <td className="p-3 text-slate-600">{consumer.type}</td>
-                      <td className="p-3 text-slate-600">{consumer.zone}</td>
-                      <td className="p-3 text-right font-semibold text-slate-800">{consumer.consumption.toLocaleString()}</td>
+                      <td className="p-3 font-medium text-gray-800 dark:text-gray-200">{consumer.name}</td>
+                      <td className="p-3 text-gray-600 dark:text-gray-300">{consumer.type}</td>
+                      <td className="p-3 text-gray-600 dark:text-gray-300">{consumer.zone}</td>
+                      <td className="p-3 text-right font-semibold text-gray-800 dark:text-gray-200">{consumer.consumption.toLocaleString()}</td>
                       <td className="p-3 text-center">
                         <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          consumer.label === 'L1' ? 'bg-red-100 text-red-800' :
-                          consumer.label === 'L2' ? 'bg-yellow-100 text-yellow-800' :
-                          consumer.label === 'L3' ? 'bg-green-100 text-green-800' :
-                          'bg-blue-100 text-blue-800'
+                          consumer.label === 'L1' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
+                          consumer.label === 'L2' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
+                          consumer.label === 'L3' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
+                          'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
                         }`}>
                           {consumer.label}
                         </span>
@@ -447,21 +448,21 @@ Total System Loss: Overall water loss calculation with efficiency metrics
       {activeWaterSubSection === 'WaterLoss' && (
         <>
           {/* Water Loss Filter Bar */}
-          <div className="bg-white shadow p-4 rounded-lg mb-6 print:hidden border border-slate-200">
+          <div className="bg-white dark:bg-gray-800 shadow p-4 rounded-lg mb-6 print:hidden border border-gray-200 dark:border-gray-600 transition-colors duration-300">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Select Month for Analysis</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1 transition-colors duration-300">Select Month for Analysis</label>
                 <div className="relative">
                   <select 
                     value={selectedWaterMonth} 
                     onChange={(e) => setSelectedWaterMonth(e.target.value)} 
-                    className="appearance-none w-full p-2.5 pr-10 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:outline-none bg-white text-slate-700"
+                    className="appearance-none w-full p-2.5 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:outline-none bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors duration-300"
                   >
                     {waterMonthsAvailable.map(month => ( 
                       <option key={month} value={month}>{month}</option> 
                     ))}
                   </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 dark:text-gray-400">
                     <CalendarDays size={16} />
                   </div>
                 </div>
@@ -469,8 +470,7 @@ Total System Loss: Overall water loss calculation with efficiency metrics
               
               <button 
                 onClick={() => setSelectedWaterMonth('May-25')} 
-                className="text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 h-[46px] w-full sm:w-auto hover:shadow-lg" 
-                style={{ backgroundColor: COLORS.primaryDark }} 
+                className="bg-primary dark:bg-blue-600 text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 h-[46px] w-full sm:w-auto hover:shadow-lg hover:bg-opacity-90"
               > 
                 <Filter size={16}/> 
                 <span>Reset to Latest</span> 
@@ -480,8 +480,8 @@ Total System Loss: Overall water loss calculation with efficiency metrics
 
           {/* Water Loss Analysis Header */}
           <div className="mb-6 text-center">
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">Water Loss Analysis for {selectedWaterMonth}</h2>
-            <p className="text-slate-600">Comprehensive analysis of water distribution efficiency and system losses</p>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2 transition-colors duration-300">Water Loss Analysis for {selectedWaterMonth}</h2>
+            <p className="text-gray-600 dark:text-gray-300 transition-colors duration-300">Comprehensive analysis of water distribution efficiency and system losses</p>
           </div>
 
           {/* Water Loss Analysis Metrics */}

@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -34,6 +35,13 @@ export default {
         'muscat-navy': '#0A1828',
         'muscat-cream': '#fafafa',
         'muscat-teal-light': '#C3FBF4',
+        
+        // Additional semantic colors for dark mode
+        'card': 'var(--background-secondary)',
+        'card-foreground': 'var(--text-primary)',
+        'muted-foreground': 'var(--text-secondary)',
+        'primary': 'var(--text-primary)',
+        'secondary': 'var(--text-secondary)',
       },
       fontFamily: {
         'inter': ['Inter', 'sans-serif'],

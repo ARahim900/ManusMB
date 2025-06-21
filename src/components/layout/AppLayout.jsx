@@ -79,7 +79,7 @@ const AppLayout = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--background-primary)' }}>
+    <div className="min-h-screen bg-background-primary dark:bg-gray-900 transition-colors duration-300">
       {/* Sidebar */}
       <div
         onMouseEnter={handleSidebarMouseEnter}
@@ -107,7 +107,7 @@ const AppLayout = ({ children }) => {
         />
         
         {/* Content Area */}
-        <main className="overflow-auto content-area" style={{ minHeight: 'calc(100vh - 64px)' }}>
+        <main className="overflow-auto content-area bg-background-primary dark:bg-gray-900 transition-colors duration-300" style={{ minHeight: 'calc(100vh - 64px)' }}>
           <div className="page-container">
             {children}
           </div>
