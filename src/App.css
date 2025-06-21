@@ -9,7 +9,7 @@
 /* Design System CSS Variables from style_guide.json */
 :root {
   /* Background Colors */
-  --background-primary: #F2F0EA;
+  --background-primary: #fafafa;
   --background-secondary: #ffffff;
   
   /* Sidebar Colors */

@@ -1,0 +1,64 @@
+{
+    "styleGuide": {
+      "palette": {
+          "background": {
+    "primary": "#fafafa",
+    "secondary": "#ffffff"
+  },
+        "sidebar": {
+          "background": "#5f5168",
+          "text": "#F2F0EA",
+          "activeBackground": "#ffffff",
+          "activeText": "#5f5168"
+        },
+        "text": {
+          "primary": "#5f5168",
+          "secondary": "#BFA181",
+          "positive": "#6A994E",
+          "negative": "#BC4749"
+        },
+        "kpi": {
+          "primaryBackground": "#5f5168",
+          "primaryText": "#ffffff"
+        },
+        "accent": {
+          "navy": "#0A1828",
+          "teal": "#A8D5E3",
+          "gold": "#BFA181",
+          "aqua": "#C3FBF4",
+          "darkBlue": "#002349"
+        },
+        "border": "#D9D4DB"
+      },
+      "typography": {
+        "fontFamily": "'Inter', sans-serif",
+        "headings": {
+          "h1": { "fontSize": "2.5rem", "fontWeight": 700 },
+          "h2": { "fontSize": "1.75rem", "fontWeight": 600 },
+          "h3": { "fontSize": "1.25rem", "fontWeight": 600 },
+          "cardTitle": { "fontSize": "1rem", "fontWeight": 500 }
+        },
+        "body": {
+          "large": { "fontSize": "1rem", "fontWeight": 400 },
+          "regular": { "fontSize": "0.875rem", "fontWeight": 400 },
+          "small": { "fontSize": "0.75rem", "fontWeight": 400 }
+        },
+        "kpiValue": {
+          "fontSize": "2rem",
+          "fontWeight": 700
+        }
+      },
+      "layout": {
+        "spacing": {
+          "xs": "4px",
+          "sm": "8px",
+          "md": "16px",
+          "lg": "24px",
+          "xl": "32px"
+        },
+        "borderRadius": "12px",
+        "boxShadow": "0 4px 12px rgba(0, 0, 0, 0.05)"
+      }
+    }
+  }
+  

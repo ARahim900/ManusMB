@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
   PieChart, Pie, Cell, LineChart, Line, Area
@@ -7,7 +7,18 @@ import {
   Droplets, CalendarDays, Building, Filter, CheckCircle, AlertCircle, 
   TrendingUp, Users2, Sparkles, X, LayoutDashboard, BarChart2 
 } from 'lucide-react';
-import { waterSystemData, waterMonthsAvailable } from '../../../Database/waterDatabase.js';
+import { 
+  waterSystemData, 
+  waterMonthsAvailable, 
+  getA1Supply, 
+  getA2Total, 
+  getA3Total, 
+  calculateWaterLoss,
+  zoneData,
+  getZoneAnalysis,
+  getAvailableZones
+} from '../../../Database/waterDatabase.js';
+import GaugeChart from '../ui/GaugeChart';
 import MetricCard from '../ui/MetricCard';
 import ChartCard from '../ui/ChartCard';
 import { Button } from '@/components/ui/button';
@@ -30,55 +41,46 @@ const WaterAnalysisModule = () => {
   const [selectedWaterMonth, setSelectedWaterMonth] = useState('May-25');
   const [activeWaterSubSection, setActiveWaterSubSection] = useState('Overview');
   const [selectedZone, setSelectedZone] = useState('All Zones');
+  const [selectedZoneForAnalysis, setSelectedZoneForAnalysis] = useState('Zone_FM');
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [aiAnalysisResult, setAiAnalysisResult] = useState("");
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+
+  // Reset pagination when zone changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedZoneForAnalysis]);
 
   // Water System Calculations based on hierarchical structure
   const waterCalculations = useMemo(() => {
     const monthData = selectedWaterMonth;
+    const lossData = calculateWaterLoss(monthData);
     
-    // Level A1 (L1) - Main Source
-    const mainBulkMeter = waterSystemData.find(item => item.label === 'L1');
-    const A1_totalSupply = mainBulkMeter ? mainBulkMeter.consumption[monthData] || 0 : 0;
-
-    // Level A2 = L2 + DC - Primary Distribution  
+    // Get meter collections for detailed analysis
     const zoneBulkMeters = waterSystemData.filter(item => item.label === 'L2');
     const directConnections = waterSystemData.filter(item => item.label === 'DC');
-    const L2_total = zoneBulkMeters.reduce((sum, meter) => sum + (meter.consumption[monthData] || 0), 0);
-    const DC_total = directConnections.reduce((sum, meter) => sum + (meter.consumption[monthData] || 0), 0);
-    const A2_total = L2_total + DC_total;
-
-    // Level A3 = L3 + DC - End-User Consumption
     const endUserMeters = waterSystemData.filter(item => item.label === 'L3');
-    const L3_total = endUserMeters.reduce((sum, meter) => sum + (meter.consumption[monthData] || 0), 0);
-    const A3_total = L3_total + DC_total; // DC appears in both A2 and A3
-
-    // Water Loss Calculations
-    const stage1Loss = A1_totalSupply - A2_total; // Trunk Main Loss
-    const stage2Loss = L2_total - L3_total; // Distribution Loss (within zones)
-    const totalLoss = A1_totalSupply - A3_total;
     
-    // Percentage calculations
-    const stage1LossPercent = A1_totalSupply > 0 ? (stage1Loss / A1_totalSupply) * 100 : 0;
-    const stage2LossPercent = L2_total > 0 ? (stage2Loss / L2_total) * 100 : 0;
-    const totalLossPercent = A1_totalSupply > 0 ? (totalLoss / A1_totalSupply) * 100 : 0;
-    const systemEfficiency = 100 - Math.abs(totalLossPercent);
+    const L2_total = zoneBulkMeters.reduce((sum, meter) => sum + (meter.consumption[monthData] || 0), 0);
+    const L3_total = endUserMeters.reduce((sum, meter) => sum + (meter.consumption[monthData] || 0), 0);
+    const DC_total = directConnections.reduce((sum, meter) => sum + (meter.consumption[monthData] || 0), 0);
 
     return {
-      A1_totalSupply,
-      A2_total,
-      A3_total,
+      A1_totalSupply: lossData.A1_supply,
+      A2_total: lossData.A2_total,
+      A3_total: lossData.A3_total,
       L2_total,
       L3_total,
       DC_total,
-      stage1Loss,
-      stage2Loss,
-      totalLoss,
-      stage1LossPercent,
-      stage2LossPercent,
-      totalLossPercent,
-      systemEfficiency,
+      stage1Loss: lossData.stage1Loss,
+      stage2Loss: lossData.stage2Loss,
+      totalLoss: lossData.totalLoss,
+      stage1LossPercent: lossData.stage1LossPercent,
+      stage2LossPercent: lossData.stage2LossPercent,
+      totalLossPercent: lossData.totalLossPercent,
+      systemEfficiency: lossData.systemEfficiency,
       zoneBulkMeters,
       directConnections,
       endUserMeters
@@ -88,27 +90,16 @@ const WaterAnalysisModule = () => {
   // Monthly trend data for water flow - A1, A2, A3 levels
   const monthlyWaterTrendData = useMemo(() => {
     return waterMonthsAvailable.map(month => {
-      // A1 (L1) - Main Source
-      const mainBulkMeter = waterSystemData.find(item => item.label === 'L1');
-      const A1_supply = mainBulkMeter ? mainBulkMeter.consumption[month] || 0 : 0;
-      
-      // A2 = L2 + DC
-      const L2_meters = waterSystemData.filter(item => item.label === 'L2');
-      const DC_meters = waterSystemData.filter(item => item.label === 'DC');
-      const L2_total = L2_meters.reduce((sum, meter) => sum + (meter.consumption[month] || 0), 0);
-      const DC_total = DC_meters.reduce((sum, meter) => sum + (meter.consumption[month] || 0), 0);
-      const A2_total = L2_total + DC_total;
-
-      // A3 = L3 + DC
-      const L3_meters = waterSystemData.filter(item => item.label === 'L3');
-      const L3_total = L3_meters.reduce((sum, meter) => sum + (meter.consumption[month] || 0), 0);
-      const A3_total = L3_total + DC_total;
+      const A1_supply = getA1Supply(month);
+      const A2_total = getA2Total(month);
+      const A3_total = getA3Total(month);
 
       return {
         name: month.replace('-24', '').replace('-25', ''),
-        A1: A1_supply,
-        A2: A2_total,
-        A3: A3_total
+        'A1 - Main Source (NAMA)': A1_supply,
+        'A2 - Primary Distribution (L2+DC)': A2_total,
+        'A3 - End-User Consumption (L3+DC)': A3_total,
+        'Water Loss': A1_supply - A3_total
       };
     });
   }, []);
@@ -133,6 +124,30 @@ const WaterAnalysisModule = () => {
       consumption: parseFloat(zone.consumption.toFixed(1))
     })).sort((a, b) => b.consumption - a.consumption);
   }, [selectedWaterMonth]);
+
+  // Zone Analysis calculations
+  const zoneAnalysisData = useMemo(() => {
+    const analysis = getZoneAnalysis(selectedZoneForAnalysis, selectedWaterMonth);
+    if (!analysis) return null;
+
+    // For Direct Connection, we handle it differently
+    if (selectedZoneForAnalysis === 'Direct_Connection') {
+      const mainBulkConsumption = getA1Supply(selectedWaterMonth);
+      const totalDirectConnections = analysis.totalIndividualConsumption;
+      
+      return {
+        ...analysis,
+        zoneBulkConsumption: mainBulkConsumption,
+        mainBulkUsagePercent: mainBulkConsumption > 0 ? (totalDirectConnections / mainBulkConsumption) * 100 : 0,
+        isDirectConnection: true
+      };
+    }
+
+    return {
+      ...analysis,
+      isDirectConnection: false
+    };
+  }, [selectedZoneForAnalysis, selectedWaterMonth]);
 
   // Top water consumers
   const topWaterConsumers = useMemo(() => {
@@ -167,31 +182,36 @@ const WaterAnalysisModule = () => {
     setAiAnalysisResult("");
     
     setTimeout(() => {
-      setAiAnalysisResult(`AI Water System Analysis Results for ${selectedWaterMonth}:
+      setAiAnalysisResult(`🚀 Water Module Implementation Complete!
 
-📊 HIERARCHICAL WATER DISTRIBUTION ANALYSIS:
+📊 HIERARCHICAL WATER DISTRIBUTION MONITORING for ${selectedWaterMonth}:
 
-• A1 - Main Source (NAMA): ${waterCalculations.A1_totalSupply.toLocaleString()} m³
-  - Single entry point from main water supplier
-  
-• A2 - Primary Distribution: ${waterCalculations.A2_total.toLocaleString()} m³
-  - Zone Bulk Meters (L2): ${waterCalculations.L2_total.toLocaleString()} m³
-  - Direct Connections (DC): ${waterCalculations.DC_total.toLocaleString()} m³
-  
-• A3 - End-User Consumption: ${waterCalculations.A3_total.toLocaleString()} m³
-  - Individual Meters (L3): ${waterCalculations.L3_total.toLocaleString()} m³
-  - Direct Connections (DC): ${waterCalculations.DC_total.toLocaleString()} m³
+A1 Level (L1): Main water source from NAMA
+• Supply: ${waterCalculations.A1_totalSupply.toLocaleString()} m³
 
-🔍 WATER LOSS ANALYSIS:
+A2 Level (L2 + DC): Primary distribution through zone bulk meters and direct connections  
+• Total Distribution: ${waterCalculations.A2_total.toLocaleString()} m³
+• Zone Bulk Meters (L2): ${waterCalculations.L2_total.toLocaleString()} m³
+• Direct Connections (DC): ${waterCalculations.DC_total.toLocaleString()} m³
 
-• Stage 1 Loss (Trunk Main): ${Math.abs(waterCalculations.stage1Loss).toFixed(0)} m³ (${Math.abs(waterCalculations.stage1LossPercent).toFixed(1)}%)
-  ${waterCalculations.stage1Loss < 0 ? '- Negative loss indicates potential meter reading variance or measurement issues' : '- Loss in main distribution network'}
-  
-• Stage 2 Loss (Distribution): ${waterCalculations.stage2Loss.toFixed(0)} m³ (${waterCalculations.stage2LossPercent.toFixed(1)}%)
-  - Loss within zone distribution networks
-  
-• Total System Variance: ${Math.abs(waterCalculations.totalLoss).toFixed(0)} m³ (${Math.abs(waterCalculations.totalLossPercent).toFixed(1)}%)
-  - System Efficiency: ${waterCalculations.systemEfficiency.toFixed(1)}%
+A3 Level (L3 + DC): End-user consumption including individual meters
+• Total Consumption: ${waterCalculations.A3_total.toLocaleString()} m³ 
+• Individual Meters (L3): ${waterCalculations.L3_total.toLocaleString()} m³
+• Direct Connections (DC): ${waterCalculations.DC_total.toLocaleString()} m³
+
+💧 WATER LOSS ANALYSIS:
+
+Stage 1 Loss: Trunk main loss between A1 and A2
+• Loss: ${waterCalculations.stage1Loss.toFixed(0)} m³ (${waterCalculations.stage1LossPercent.toFixed(1)}%)
+${waterCalculations.stage1Loss > 0 ? '• Indicates loss in main distribution network' : '• Negative indicates meter reading variance or measurement timing differences'}
+
+Stage 2 Loss: Distribution loss within zones (L2 to L3)  
+• Loss: ${waterCalculations.stage2Loss.toFixed(0)} m³ (${waterCalculations.stage2LossPercent.toFixed(1)}%)
+• Loss within zone distribution networks
+
+Total System Loss: Overall water loss calculation with efficiency metrics
+• Total Variance: ${waterCalculations.totalLoss.toFixed(0)} m³ (${Math.abs(waterCalculations.totalLossPercent).toFixed(1)}%)
+• System Efficiency: ${waterCalculations.systemEfficiency.toFixed(1)}%
 
 🎯 KEY INSIGHTS:
 
@@ -572,6 +592,350 @@ const WaterAnalysisModule = () => {
               </div>
             </div>
           </ChartCard>
+        </>
+      )}
+
+      {activeWaterSubSection === 'ZoneAnalysis' && (
+        <>
+          {/* Zone Analysis Filters */}
+          <div className="bg-white shadow p-4 rounded-lg mb-6 print:hidden border border-slate-200">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Select Zone for Analysis</label>
+                <div className="relative">
+                  <select 
+                    value={selectedZoneForAnalysis} 
+                    onChange={(e) => setSelectedZoneForAnalysis(e.target.value)} 
+                    className="appearance-none w-full p-2.5 pr-10 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:outline-none bg-white text-slate-700"
+                  >
+                    {getAvailableZones().map(zone => ( 
+                      <option key={zone.key} value={zone.key}>{zone.name}</option> 
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                    <Building size={16} />
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Month</label>
+                <div className="relative">
+                  <select 
+                    value={selectedWaterMonth} 
+                    onChange={(e) => setSelectedWaterMonth(e.target.value)} 
+                    className="appearance-none w-full p-2.5 pr-10 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:outline-none bg-white text-slate-700"
+                  >
+                    {waterMonthsAvailable.map(month => ( 
+                      <option key={month} value={month}>{month}</option> 
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                    <CalendarDays size={16} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {zoneAnalysisData && (
+            <>
+              {/* Zone Analysis Header */}
+              <div className="mb-6 text-center">
+                <h2 className="text-2xl font-bold text-slate-800 mb-2">
+                  {zoneAnalysisData.zone.name} Analysis for {selectedWaterMonth}
+                </h2>
+                <p className="text-slate-600">
+                  {zoneAnalysisData.isDirectConnection ? 
+                    'Direct connection meters analysis with Main Bulk reference' : 
+                    'Zone bulk vs individual meters consumption analysis'
+                  }
+                </p>
+              </div>
+
+              {/* Gauge Charts Section */}
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-slate-700 mb-4">Water Consumption Analysis</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white p-6 rounded-lg shadow border border-slate-200">
+                  {zoneAnalysisData.isDirectConnection ? (
+                    <>
+                      {/* For Direct Connection - show Main Bulk vs Direct Connections */}
+                      <GaugeChart
+                        percentage={100}
+                        value={zoneAnalysisData.zoneBulkConsumption}
+                        title="Main Bulk (NAMA)"
+                        subtitle="Total Water Supply"
+                        color="#3b82f6"
+                        size={140}
+                      />
+                      <GaugeChart
+                        percentage={zoneAnalysisData.mainBulkUsagePercent}
+                        value={zoneAnalysisData.totalIndividualConsumption}
+                        title="Direct Connections"
+                        subtitle="Total DC Consumption"
+                        color="#10b981"
+                        size={140}
+                      />
+                      <GaugeChart
+                        percentage={100 - zoneAnalysisData.mainBulkUsagePercent}
+                        value={zoneAnalysisData.zoneBulkConsumption - zoneAnalysisData.totalIndividualConsumption}
+                        title="Other Zones Usage"
+                        subtitle="Remaining Consumption"
+                        color="#6b7280"
+                        size={140}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      {/* For regular zones - show Zone Bulk vs Individual meters */}
+                      <GaugeChart
+                        percentage={100}
+                        value={zoneAnalysisData.zoneBulkConsumption}
+                        title="Zone Bulk Consumption"
+                        subtitle={`${zoneAnalysisData.zone.name} Total`}
+                        color="#4e4456"
+                        size={140}
+                      />
+                      <GaugeChart
+                        percentage={zoneAnalysisData.efficiency}
+                        value={zoneAnalysisData.totalIndividualConsumption}
+                        title="Sum of Individual Meters"
+                        subtitle="Total L3 Consumption"
+                        color="#10b981"
+                        size={140}
+                      />
+                      <GaugeChart
+                        percentage={Math.abs(zoneAnalysisData.lossPercentage)}
+                        value={Math.abs(zoneAnalysisData.difference)}
+                        title={zoneAnalysisData.difference < 0 ? "Meter Variance" : "Distribution Loss"}
+                        subtitle={`${Math.abs(zoneAnalysisData.lossPercentage).toFixed(1)}% Difference`}
+                        color={zoneAnalysisData.difference < 0 ? "#f59e0b" : "#ef4444"}
+                        size={140}
+                      />
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Zone Details Table */}
+              <div className="bg-white shadow rounded-lg border border-slate-200">
+                <div className="p-6 border-b border-slate-200">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-800">
+                        {zoneAnalysisData.zone.name} - Meter Details for {selectedWaterMonth}
+                      </h3>
+                      <p className="text-sm text-slate-600 mt-1">
+                        {zoneAnalysisData.individualMetersData.length} meters in this {zoneAnalysisData.isDirectConnection ? 'connection group' : 'zone'}
+                        {zoneAnalysisData.individualMetersData.length > itemsPerPage && (
+                          <span className="ml-2 text-blue-600">• Paginated view ({itemsPerPage} per page)</span>
+                        )}
+                      </p>
+                    </div>
+                    {zoneAnalysisData.individualMetersData.length > itemsPerPage && (
+                      <div className="text-right">
+                        <p className="text-sm text-slate-500">
+                          Page {currentPage} of {Math.ceil(zoneAnalysisData.individualMetersData.length / itemsPerPage)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        <th className="text-left p-4 font-semibold text-slate-700">Meter Label</th>
+                        <th className="text-left p-4 font-semibold text-slate-700">Account #</th>
+                        <th className="text-left p-4 font-semibold text-slate-700">Type</th>
+                        <th className="text-right p-4 font-semibold text-slate-700">Consumption (m³)</th>
+                        <th className="text-center p-4 font-semibold text-slate-700">% of {zoneAnalysisData.isDirectConnection ? 'Total DC' : 'Zone Total'}</th>
+                        <th className="text-center p-4 font-semibold text-slate-700">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* Zone Bulk Meter Row (if not Direct Connection) */}
+                      {!zoneAnalysisData.isDirectConnection && (
+                        <tr className="border-b border-slate-100 bg-blue-50">
+                          <td className="p-4 font-semibold text-blue-800">{zoneAnalysisData.zone.bulk}</td>
+                          <td className="p-4 text-blue-700">{zoneAnalysisData.zone.bulkAccount}</td>
+                          <td className="p-4 text-blue-700">Zone Bulk</td>
+                          <td className="p-4 text-right font-semibold text-blue-800">
+                            {zoneAnalysisData.zoneBulkConsumption.toLocaleString()}
+                          </td>
+                          <td className="p-4 text-center">
+                            <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                              100.0%
+                            </span>
+                          </td>
+                          <td className="p-4 text-center">
+                            <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                              L2 - Zone Bulk
+                            </span>
+                          </td>
+                        </tr>
+                      )}
+                      
+                      {/* Individual Meters with Pagination */}
+                      {(() => {
+                        const sortedMeters = zoneAnalysisData.individualMetersData.sort((a, b) => b.consumption - a.consumption);
+                        const totalItems = sortedMeters.length;
+                        const totalPages = Math.ceil(totalItems / itemsPerPage);
+                        const startIndex = (currentPage - 1) * itemsPerPage;
+                        const endIndex = startIndex + itemsPerPage;
+                        const currentPageItems = sortedMeters.slice(startIndex, endIndex);
+                        
+                        return currentPageItems.map((meter, index) => {
+                          const percentage = zoneAnalysisData.isDirectConnection ? 
+                            (zoneAnalysisData.totalIndividualConsumption > 0 ? (meter.consumption / zoneAnalysisData.totalIndividualConsumption) * 100 : 0) :
+                            (zoneAnalysisData.zoneBulkConsumption > 0 ? (meter.consumption / zoneAnalysisData.zoneBulkConsumption) * 100 : 0);
+                          
+                          return (
+                            <tr key={meter.account} className="border-b border-slate-100 hover:bg-slate-50">
+                              <td className="p-4 font-medium text-slate-800">{meter.label}</td>
+                              <td className="p-4 text-slate-600">{meter.account}</td>
+                              <td className="p-4 text-slate-600">{meter.type}</td>
+                              <td className="p-4 text-right font-semibold text-slate-800">
+                                {meter.consumption.toLocaleString()}
+                              </td>
+                              <td className="p-4 text-center">
+                                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                  percentage > 20 ? 'bg-red-100 text-red-800' :
+                                  percentage > 10 ? 'bg-yellow-100 text-yellow-800' :
+                                  percentage > 5 ? 'bg-blue-100 text-blue-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {percentage.toFixed(1)}%
+                                </span>
+                              </td>
+                              <td className="p-4 text-center">
+                                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                  meter.consumption === 0 ? 'bg-gray-100 text-gray-800' :
+                                  meter.consumption > 1000 ? 'bg-red-100 text-red-800' :
+                                  meter.consumption > 500 ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-green-100 text-green-800'
+                                }`}>
+                                  {meter.consumption === 0 ? 'No Usage' :
+                                   meter.consumption > 1000 ? 'High' :
+                                   meter.consumption > 500 ? 'Medium' : 'Normal'}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        });
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination Controls */}
+                {(() => {
+                  const sortedMeters = zoneAnalysisData.individualMetersData.sort((a, b) => b.consumption - a.consumption);
+                  const totalItems = sortedMeters.length;
+                  const totalPages = Math.ceil(totalItems / itemsPerPage);
+                  
+                  if (totalPages > 1) {
+                    return (
+                      <div className="p-4 border-t border-slate-200 bg-white">
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-slate-600">
+                            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} meters
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                              disabled={currentPage === 1}
+                              className={`px-3 py-1 rounded text-sm ${
+                                currentPage === 1 
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                  : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
+                              }`}
+                            >
+                              Previous
+                            </button>
+                            
+                            {/* Page Numbers */}
+                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                              let pageNum;
+                              if (totalPages <= 5) {
+                                pageNum = i + 1;
+                              } else if (currentPage <= 3) {
+                                pageNum = i + 1;
+                              } else if (currentPage >= totalPages - 2) {
+                                pageNum = totalPages - 4 + i;
+                              } else {
+                                pageNum = currentPage - 2 + i;
+                              }
+                              
+                              return (
+                                <button
+                                  key={pageNum}
+                                  onClick={() => setCurrentPage(pageNum)}
+                                  className={`px-3 py-1 rounded text-sm ${
+                                    currentPage === pageNum
+                                      ? 'bg-blue-600 text-white'
+                                      : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
+                                  }`}
+                                >
+                                  {pageNum}
+                                </button>
+                              );
+                            })}
+                            
+                            <button
+                              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                              disabled={currentPage === totalPages}
+                              className={`px-3 py-1 rounded text-sm ${
+                                currentPage === totalPages 
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                  : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
+                              }`}
+                            >
+                              Next
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+
+                {/* Summary Footer */}
+                <div className="p-4 bg-slate-50 border-t border-slate-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                    <div className="text-center">
+                      <p className="font-semibold text-slate-800">
+                        {zoneAnalysisData.isDirectConnection ? 'Total DC Consumption' : 'Zone Individual Total'}
+                      </p>
+                      <p className="text-xl font-bold text-blue-600">
+                        {zoneAnalysisData.totalIndividualConsumption.toLocaleString()} m³
+                      </p>
+                    </div>
+                    {!zoneAnalysisData.isDirectConnection && (
+                      <>
+                        <div className="text-center">
+                          <p className="font-semibold text-slate-800">Zone Efficiency</p>
+                          <p className="text-xl font-bold text-green-600">
+                            {zoneAnalysisData.efficiency.toFixed(1)}%
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="font-semibold text-slate-800">
+                            {zoneAnalysisData.difference < 0 ? 'Meter Variance' : 'Zone Loss'}
+                          </p>
+                          <p className={`text-xl font-bold ${zoneAnalysisData.difference < 0 ? 'text-orange-600' : 'text-red-600'}`}>
+                            {Math.abs(zoneAnalysisData.difference).toFixed(0)} m³
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </>
       )}
 

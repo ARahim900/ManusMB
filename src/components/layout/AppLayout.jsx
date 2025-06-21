@@ -79,7 +79,7 @@ const AppLayout = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--muscat-white-blue)' }}>
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--background-primary)' }}>
       {/* Sidebar */}
       <div
         onMouseEnter={handleSidebarMouseEnter}

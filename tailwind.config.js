@@ -8,7 +8,7 @@ export default {
     extend: {
       colors: {
         // Style Guide Colors - Exact matches from style_guide.json
-        'background-primary': '#F2F0EA',
+        'background-primary': '#fafafa',
         'background-secondary': '#ffffff',
         'sidebar-bg': '#5f5168',
         'sidebar-text': '#F2F0EA',
@@ -32,7 +32,7 @@ export default {
         'muscat-teal': '#A8D5E3',
         'muscat-gold': '#BFA181',
         'muscat-navy': '#0A1828',
-        'muscat-cream': '#F2F0EA',
+        'muscat-cream': '#fafafa',
         'muscat-teal-light': '#C3FBF4',
       },
       fontFamily: {

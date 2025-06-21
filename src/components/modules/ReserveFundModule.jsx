@@ -73,7 +73,7 @@ const ReserveFundModule = () => {
     teal: '#A8D5E3',
     lightTeal: '#C3FBF4',
     beige: '#BFA181',
-    lightBeige: '#F2F0EA',
+    lightBeige: '#fafafa',
     navy: '#0A1828',
     darkNavy: '#002349',
     white: '#ffffff'
