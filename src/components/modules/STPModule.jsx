@@ -157,8 +157,43 @@ const STPModule = () => {
     { name: 'Tanker Revenue', value: currentMonthData.tankerIncome, color: '#f59e0b' }
   ] : [];
 
+  // Enhanced data for interactive charts
+  const enhancedMonthlyData = useMemo(() => {
+    return monthlyPerformanceData.map(month => {
+      // Calculate estimated tanker volume (assuming 20m³ per tanker trip)
+      const estimatedTankerVolume = month.totalTankers * 20;
+      // Calculate direct sewage as the difference
+      const directSewageVolume = month.totalProcessedWater - estimatedTankerVolume;
+      
+      return {
+        month: month.month,
+        monthShort: month.month.split(' ')[0],
+        monthKey: month.monthKey,
+        totalProcessedWater: month.totalProcessedWater,
+        totalTSEWater: month.totalTSEWater,
+        totalTreatedWater: month.totalTreatedWater,
+        tankerVolume: estimatedTankerVolume,
+        directSewageVolume: Math.max(0, directSewageVolume),
+        tankerPercentage: ((estimatedTankerVolume / month.totalProcessedWater) * 100).toFixed(1),
+        directSewagePercentage: ((directSewageVolume / month.totalProcessedWater) * 100).toFixed(1),
+        treatmentEfficiency: month.treatmentEfficiency,
+        operatingDays: month.operatingDays,
+        avgDailyProcessed: month.avgDailyProcessed,
+        avgDailyTSE: month.avgDailyTSE
+      };
+    });
+  }, []);
+
+  // Filtered data for selected months range
+  const [monthRange, setMonthRange] = useState({ start: 0, end: enhancedMonthlyData.length - 1 });
+  
+  const filteredChartData = useMemo(() => {
+    return enhancedMonthlyData.slice(monthRange.start, monthRange.end + 1);
+  }, [enhancedMonthlyData, monthRange]);
+
   const tabs = [
     { id: 'dashboard', label: 'Dashboard' },
+    { id: 'analytics', label: 'Advanced Analytics' },
     { id: 'monthly', label: 'Monthly Analysis' },
     { id: 'financial', label: 'Financial Overview' },
     { id: 'annual', label: 'Annual Summary' }
@@ -220,6 +255,300 @@ const STPModule = () => {
             </PieChart>
           </ResponsiveContainer>
         </ChartCard>
+      </div>
+    </div>
+  );
+
+  const renderAdvancedAnalytics = () => (
+    <div className="space-y-6">
+      {/* Interactive Controls */}
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Chart Controls & Filters</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Start Month</label>
+            <select 
+              value={monthRange.start} 
+              onChange={(e) => setMonthRange(prev => ({ ...prev, start: parseInt(e.target.value) }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {enhancedMonthlyData.map((month, index) => (
+                <option key={index} value={index}>{month.month}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">End Month</label>
+            <select 
+              value={monthRange.end} 
+              onChange={(e) => setMonthRange(prev => ({ ...prev, end: parseInt(e.target.value) }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {enhancedMonthlyData.map((month, index) => (
+                <option key={index} value={index}>{month.month}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-end">
+            <button 
+              onClick={() => setMonthRange({ start: 0, end: enhancedMonthlyData.length - 1 })}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition-colors"
+            >
+              Reset to All Months
+            </button>
+          </div>
+        </div>
+        <div className="mt-3 text-sm text-gray-600">
+          Showing data from <span className="font-medium">{enhancedMonthlyData[monthRange.start]?.month}</span> to <span className="font-medium">{enhancedMonthlyData[monthRange.end]?.month}</span>
+        </div>
+      </div>
+
+      {/* Modern Line Chart: Water Processing vs TSE Generation */}
+      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+        <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-green-50">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+            <Activity className="h-5 w-5 mr-2 text-blue-600" />
+            Water Processing vs TSE Generation Trend
+          </h3>
+          <p className="text-sm text-gray-600 mt-1">Interactive analysis of water treatment efficiency over time</p>
+        </div>
+        <div className="p-6">
+          <div className="h-96">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={filteredChartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                <defs>
+                  <linearGradient id="processedGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                  </linearGradient>
+                  <linearGradient id="tseGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis 
+                  dataKey="monthShort" 
+                  tick={{ fontSize: 12 }}
+                  stroke="#6b7280"
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
+                />
+                <YAxis 
+                  tick={{ fontSize: 12 }}
+                  stroke="#6b7280"
+                  label={{ value: 'Volume (m³)', angle: -90, position: 'insideLeft' }}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
+                  formatter={(value, name) => [
+                    `${value.toLocaleString()} m³`,
+                    name === 'totalProcessedWater' ? 'Total Processed Water' : 'Total TSE Water Generated'
+                  ]}
+                  labelFormatter={(label) => `Month: ${label}`}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="totalProcessedWater" 
+                  stroke="#3b82f6" 
+                  strokeWidth={3}
+                  fill="url(#processedGradient)"
+                  dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="totalTSEWater" 
+                  stroke="#10b981" 
+                  strokeWidth={3}
+                  fill="url(#tseGradient)"
+                  dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, stroke: '#10b981', strokeWidth: 2 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          
+          {/* Summary Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6 pt-6 border-t">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">
+                {filteredChartData.reduce((sum, item) => sum + item.totalProcessedWater, 0).toLocaleString()}
+              </div>
+              <div className="text-sm text-gray-500">Total Processed (m³)</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">
+                {filteredChartData.reduce((sum, item) => sum + item.totalTSEWater, 0).toLocaleString()}
+              </div>
+              <div className="text-sm text-gray-500">Total TSE Generated (m³)</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-600">
+                {(filteredChartData.reduce((sum, item) => sum + item.treatmentEfficiency, 0) / filteredChartData.length).toFixed(1)}%
+              </div>
+              <div className="text-sm text-gray-500">Average Efficiency</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-amber-600">
+                {filteredChartData.reduce((sum, item) => sum + item.operatingDays, 0)}
+              </div>
+              <div className="text-sm text-gray-500">Total Operating Days</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Input Sources Analysis Chart */}
+      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+        <div className="px-6 py-4 border-b bg-gradient-to-r from-purple-50 to-amber-50">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+            <BarChart3 className="h-5 w-5 mr-2 text-purple-600" />
+            Input Sources Analysis: Tanker vs Direct Sewage
+          </h3>
+          <p className="text-sm text-gray-600 mt-1">Breakdown of water input sources by volume and percentage</p>
+        </div>
+        <div className="p-6">
+          <div className="h-96">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                <defs>
+                  <pattern id="tankerPattern" patternUnits="userSpaceOnUse" width="4" height="4">
+                    <rect width="4" height="4" fill="#8b5cf6" opacity="0.1"/>
+                    <path d="M 0,4 l 4,-4 M -1,1 l 2,-2 M 3,5 l 2,-2" stroke="#8b5cf6" strokeWidth="1"/>
+                  </pattern>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis 
+                  dataKey="monthShort" 
+                  tick={{ fontSize: 12 }}
+                  stroke="#6b7280"
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
+                />
+                <YAxis 
+                  yAxisId="volume"
+                  orientation="left"
+                  tick={{ fontSize: 12 }}
+                  stroke="#6b7280"
+                  label={{ value: 'Volume (m³)', angle: -90, position: 'insideLeft' }}
+                />
+                <YAxis 
+                  yAxisId="percentage"
+                  orientation="right"
+                  tick={{ fontSize: 12 }}
+                  stroke="#6b7280"
+                  label={{ value: 'Percentage (%)', angle: 90, position: 'insideRight' }}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
+                  formatter={(value, name, props) => {
+                    if (name.includes('Percentage')) {
+                      return [`${value}%`, name];
+                    }
+                    return [`${value.toLocaleString()} m³`, name];
+                  }}
+                  labelFormatter={(label) => `Month: ${label}`}
+                />
+                <Bar 
+                  yAxisId="volume"
+                  dataKey="tankerVolume" 
+                  name="Tanker Volume"
+                  fill="#8b5cf6"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar 
+                  yAxisId="volume"
+                  dataKey="directSewageVolume" 
+                  name="Direct Sewage Volume"
+                  fill="#f59e0b"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Line 
+                  yAxisId="percentage"
+                  type="monotone" 
+                  dataKey="tankerPercentage" 
+                  name="Tanker Percentage"
+                  stroke="#7c3aed" 
+                  strokeWidth={3}
+                  dot={{ fill: '#7c3aed', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, stroke: '#7c3aed', strokeWidth: 2 }}
+                />
+                <Line 
+                  yAxisId="percentage"
+                  type="monotone" 
+                  dataKey="directSewagePercentage" 
+                  name="Direct Sewage Percentage"
+                  stroke="#d97706" 
+                  strokeWidth={3}
+                  strokeDasharray="5 5"
+                  dot={{ fill: '#d97706', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, stroke: '#d97706', strokeWidth: 2 }}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Input Sources Summary */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 pt-6 border-t">
+            <div className="bg-purple-50 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-medium text-purple-800">Tanker Input</h4>
+                  <div className="text-2xl font-bold text-purple-600 mt-1">
+                    {filteredChartData.reduce((sum, item) => sum + item.tankerVolume, 0).toLocaleString()} m³
+                  </div>
+                  <div className="text-sm text-purple-600 mt-1">
+                    Avg: {(filteredChartData.reduce((sum, item) => sum + parseFloat(item.tankerPercentage), 0) / filteredChartData.length).toFixed(1)}%
+                  </div>
+                </div>
+                <Trash2 className="h-8 w-8 text-purple-500" />
+              </div>
+            </div>
+            
+            <div className="bg-amber-50 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-medium text-amber-800">Direct Sewage</h4>
+                  <div className="text-2xl font-bold text-amber-600 mt-1">
+                    {filteredChartData.reduce((sum, item) => sum + item.directSewageVolume, 0).toLocaleString()} m³
+                  </div>
+                  <div className="text-sm text-amber-600 mt-1">
+                    Avg: {(filteredChartData.reduce((sum, item) => sum + parseFloat(item.directSewagePercentage), 0) / filteredChartData.length).toFixed(1)}%
+                  </div>
+                </div>
+                <Factory className="h-8 w-8 text-amber-500" />
+              </div>
+            </div>
+            
+            <div className="bg-blue-50 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-medium text-blue-800">Total Input</h4>
+                  <div className="text-2xl font-bold text-blue-600 mt-1">
+                    {filteredChartData.reduce((sum, item) => sum + item.totalProcessedWater, 0).toLocaleString()} m³
+                  </div>
+                  <div className="text-sm text-blue-600 mt-1">
+                    {filteredChartData.length} months selected
+                  </div>
+                </div>
+                <Droplets className="h-8 w-8 text-blue-500" />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -510,6 +839,7 @@ const STPModule = () => {
       {/* Tab Content */}
       <div className="tab-content">
         {activeTab === 'dashboard' && renderDashboard()}
+        {activeTab === 'analytics' && renderAdvancedAnalytics()}
         {activeTab === 'monthly' && renderMonthlyAnalysis()}
         {activeTab === 'financial' && renderFinancialOverview()}
         {activeTab === 'annual' && renderAnnualSummary()}
