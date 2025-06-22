@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import MetricCard from '../ui/MetricCard';
 import ChartCard from '../ui/ChartCard';
+import LoadingSpinner from '../ui/LoadingSpinner';
+import ErrorBoundary from '../ui/ErrorBoundary';
 import { Button } from '@/components/ui/button';
 import { 
   Factory, 
@@ -36,160 +38,256 @@ import {
   Cell,
   ComposedChart
 } from 'recharts';
-import { 
-  monthlyPerformanceData, 
-  financialAnalysisSummary, 
+
+// Import with error handling
+let stpDataService;
+try {
+  stpDataService = require('../../services/stpMonthlyDataService');
+} catch (error) {
+  console.error('Failed to load STP data service:', error);
+  stpDataService = {
+    monthlyPerformanceData: [],
+    financialAnalysisSummary: { totalFinancialBenefit: { total: 0, monthlyAverage: 0 } },
+    getAnnualSummary: () => ({}),
+    TANKER_INCOME_PER_TRIP: 4.5,
+    TSE_SAVING_PER_M3: 1.32,
+    STP_DESIGN_CAPACITY: 750
+  };
+}
+
+const { 
+  monthlyPerformanceData = [], 
+  financialAnalysisSummary = { totalFinancialBenefit: { total: 0, monthlyAverage: 0 } }, 
   getDataByMonth, 
   getMonthlyData, 
   getPerformanceMetrics, 
-  getAnnualSummary,
-  TANKER_INCOME_PER_TRIP, 
-  TSE_SAVING_PER_M3, 
-  STP_DESIGN_CAPACITY 
-} from '../../services/stpMonthlyDataService';
+  getAnnualSummary = () => ({}),
+  TANKER_INCOME_PER_TRIP = 4.5, 
+  TSE_SAVING_PER_M3 = 1.32, 
+  STP_DESIGN_CAPACITY = 750 
+} = stpDataService;
 
 const STPModule = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   
   // Get the most recent month with data as default
   const defaultMonth = useMemo(() => {
-    const sortedMonths = monthlyPerformanceData.sort((a, b) => new Date(b.monthKey) - new Date(a.monthKey));
-    return sortedMonths[0]?.monthKey || '2025-06';
+    try {
+      if (!monthlyPerformanceData || monthlyPerformanceData.length === 0) {
+        return '2025-06';
+      }
+      const sortedMonths = monthlyPerformanceData.sort((a, b) => new Date(b.monthKey) - new Date(a.monthKey));
+      return sortedMonths[0]?.monthKey || '2025-06';
+    } catch (error) {
+      console.error('Error getting default month:', error);
+      return '2025-06';
+    }
   }, []);
   
   const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
 
-  // Get available months dynamically
+  // Get available months dynamically with error handling
   const availableMonths = useMemo(() => {
-    return monthlyPerformanceData
-      .sort((a, b) => new Date(b.monthKey) - new Date(a.monthKey))
-      .map(month => ({
-        value: month.monthKey,
-        label: month.month
-      }));
+    try {
+      if (!monthlyPerformanceData || monthlyPerformanceData.length === 0) {
+        return [{ value: '2025-06', label: 'June 2025' }];
+      }
+      return monthlyPerformanceData
+        .sort((a, b) => new Date(b.monthKey) - new Date(a.monthKey))
+        .map(month => ({
+          value: month.monthKey,
+          label: month.month
+        }));
+    } catch (error) {
+      console.error('Error processing available months:', error);
+      return [{ value: '2025-06', label: 'June 2025' }];
+    }
   }, []);
 
-  // Get current month data
+  // Get current month data with error handling
   const currentMonthData = useMemo(() => {
-    return monthlyPerformanceData.find(m => m.monthKey === selectedMonth);
+    try {
+      if (!monthlyPerformanceData || monthlyPerformanceData.length === 0) {
+        return null;
+      }
+      return monthlyPerformanceData.find(m => m.monthKey === selectedMonth) || monthlyPerformanceData[0];
+    } catch (error) {
+      console.error('Error getting current month data:', error);
+      return null;
+    }
   }, [selectedMonth]);
 
-  // Get annual summary
+  // Get annual summary with error handling
   const annualSummary = useMemo(() => {
-    return getAnnualSummary();
-  }, []);
-
-  // Prepare chart data for monthly trends
-  const monthlyTrendData = useMemo(() => {
-    return monthlyPerformanceData.map(month => ({
-      month: month.month.split(' ')[0], // Just month name
-      treated: month.totalTreatedWater,
-      tse: month.totalTSEWater,
-      processed: month.totalProcessedWater,
-      efficiency: month.treatmentEfficiency,
-      benefit: month.totalFinancialBenefit,
-      tankers: month.totalTankers,
-      capacityUtilization: (month.avgDailyTSE / STP_DESIGN_CAPACITY) * 100
-    }));
-  }, []);
-
-  // STP Key Performance Metrics
-  const stpMetrics = currentMonthData ? [
-    {
-      title: 'Total Water Treated',
-      value: currentMonthData.totalTreatedWater.toLocaleString(),
-      unit: 'm³',
-      subtitle: `Avg: ${currentMonthData.avgDailyTreated} m³/day | ${currentMonthData.operatingDays} operating days`,
-      icon: Droplets,
-      iconColor: 'text-blue-500',
-      trend: currentMonthData.treatmentEfficiency > 110 ? 'up' : 'stable'
-    },
-    {
-      title: 'TSE Water Output',
-      value: currentMonthData.totalTSEWater.toLocaleString(),
-      unit: 'm³',
-      subtitle: `Avg: ${currentMonthData.avgDailyTSE} m³/day | Capacity: ${((currentMonthData.avgDailyTSE / STP_DESIGN_CAPACITY) * 100).toFixed(1)}%`,
-      icon: CheckCircle,
-      iconColor: 'text-green-500',
-      trend: currentMonthData.avgDailyTSE > 500 ? 'up' : 'down'
-    },
-    {
-      title: 'Treatment Efficiency',
-      value: currentMonthData.treatmentEfficiency.toFixed(1),
-      unit: '%',
-      subtitle: 'TSE/Treated Water Ratio',
-      icon: TrendingUp,
-      iconColor: 'text-emerald-500',
-      trend: currentMonthData.treatmentEfficiency > 110 ? 'up' : 'stable'
-    },
-    {
-      title: 'Financial Benefit',
-      value: currentMonthData.totalFinancialBenefit.toLocaleString(),
-      unit: 'OMR',
-      subtitle: `Tanker: ${currentMonthData.tankerIncome.toLocaleString()} + TSE: ${currentMonthData.tseWaterSavings.toLocaleString()}`,
-      icon: DollarSign,
-      iconColor: 'text-amber-500',
-      trend: currentMonthData.totalFinancialBenefit > 20000 ? 'up' : 'down'
-    },
-    {
-      title: 'Tanker Operations',
-      value: currentMonthData.totalTankers.toLocaleString(),
-      unit: 'trips',
-      subtitle: `Avg: ${currentMonthData.avgDailyTankers.toFixed(1)} trips/day`,
-      icon: Trash2,
-      iconColor: 'text-purple-500',
-      trend: currentMonthData.avgDailyTankers > 8 ? 'up' : 'down'
-    },
-    {
-      title: 'Capacity Utilization',
-      value: ((currentMonthData.avgDailyTSE / STP_DESIGN_CAPACITY) * 100).toFixed(1),
-      unit: '%',
-      subtitle: `Design Capacity: ${STP_DESIGN_CAPACITY} m³/day`,
-      icon: Gauge,
-      iconColor: 'text-indigo-500',
-      trend: currentMonthData.avgDailyTSE > 500 ? 'up' : 'stable'
+    try {
+      return getAnnualSummary() || {};
+    } catch (error) {
+      console.error('Error getting annual summary:', error);
+      return {};
     }
-  ] : [];
+  }, []);
 
-  // Financial breakdown for pie chart
-  const financialBreakdown = currentMonthData ? [
-    { name: 'TSE Water Savings', value: currentMonthData.tseWaterSavings, color: '#10b981' },
-    { name: 'Tanker Revenue', value: currentMonthData.tankerIncome, color: '#f59e0b' }
-  ] : [];
+  // Prepare chart data for monthly trends with error handling
+  const monthlyTrendData = useMemo(() => {
+    try {
+      if (!monthlyPerformanceData || monthlyPerformanceData.length === 0) {
+        return [];
+      }
+      return monthlyPerformanceData.map(month => ({
+        month: month.month ? month.month.split(' ')[0] : 'Unknown',
+        treated: month.totalTreatedWater || 0,
+        tse: month.totalTSEWater || 0,
+        processed: month.totalProcessedWater || 0,
+        efficiency: month.treatmentEfficiency || 0,
+        benefit: month.totalFinancialBenefit || 0,
+        tankers: month.totalTankers || 0,
+        capacityUtilization: month.avgDailyTSE ? (month.avgDailyTSE / STP_DESIGN_CAPACITY) * 100 : 0
+      }));
+    } catch (error) {
+      console.error('Error processing monthly trend data:', error);
+      return [];
+    }
+  }, []);
 
-  // Enhanced data for interactive charts
+  // STP Key Performance Metrics with error handling
+  const stpMetrics = useMemo(() => {
+    if (!currentMonthData) return [];
+    
+    try {
+      return [
+        {
+          title: 'Total Water Treated',
+          value: (currentMonthData.totalTreatedWater || 0).toLocaleString(),
+          unit: 'm³',
+          subtitle: `Avg: ${currentMonthData.avgDailyTreated || 0} m³/day | ${currentMonthData.operatingDays || 0} operating days`,
+          icon: Droplets,
+          iconColor: 'text-blue-500',
+          trend: (currentMonthData.treatmentEfficiency || 0) > 110 ? 'up' : 'stable'
+        },
+        {
+          title: 'TSE Water Output',
+          value: (currentMonthData.totalTSEWater || 0).toLocaleString(),
+          unit: 'm³',
+          subtitle: `Avg: ${currentMonthData.avgDailyTSE || 0} m³/day | Capacity: ${(((currentMonthData.avgDailyTSE || 0) / STP_DESIGN_CAPACITY) * 100).toFixed(1)}%`,
+          icon: CheckCircle,
+          iconColor: 'text-green-500',
+          trend: (currentMonthData.avgDailyTSE || 0) > 500 ? 'up' : 'down'
+        },
+        {
+          title: 'Treatment Efficiency',
+          value: (currentMonthData.treatmentEfficiency || 0).toFixed(1),
+          unit: '%',
+          subtitle: 'TSE/Treated Water Ratio',
+          icon: TrendingUp,
+          iconColor: 'text-emerald-500',
+          trend: (currentMonthData.treatmentEfficiency || 0) > 110 ? 'up' : 'stable'
+        },
+        {
+          title: 'Financial Benefit',
+          value: (currentMonthData.totalFinancialBenefit || 0).toLocaleString(),
+          unit: 'OMR',
+          subtitle: `Tanker: ${(currentMonthData.tankerIncome || 0).toLocaleString()} + TSE: ${(currentMonthData.tseWaterSavings || 0).toLocaleString()}`,
+          icon: DollarSign,
+          iconColor: 'text-amber-500',
+          trend: (currentMonthData.totalFinancialBenefit || 0) > 20000 ? 'up' : 'down'
+        },
+        {
+          title: 'Tanker Operations',
+          value: (currentMonthData.totalTankers || 0).toLocaleString(),
+          unit: 'trips',
+          subtitle: `Avg: ${(currentMonthData.avgDailyTankers || 0).toFixed(1)} trips/day`,
+          icon: Trash2,
+          iconColor: 'text-purple-500',
+          trend: (currentMonthData.avgDailyTankers || 0) > 8 ? 'up' : 'down'
+        },
+        {
+          title: 'Capacity Utilization',
+          value: (((currentMonthData.avgDailyTSE || 0) / STP_DESIGN_CAPACITY) * 100).toFixed(1),
+          unit: '%',
+          subtitle: `Design Capacity: ${STP_DESIGN_CAPACITY} m³/day`,
+          icon: Gauge,
+          iconColor: 'text-indigo-500',
+          trend: (currentMonthData.avgDailyTSE || 0) > 500 ? 'up' : 'stable'
+        }
+      ];
+    } catch (error) {
+      console.error('Error processing STP metrics:', error);
+      return [];
+    }
+  }, [currentMonthData]);
+
+  // Financial breakdown for pie chart with error handling
+  const financialBreakdown = useMemo(() => {
+    if (!currentMonthData) return [];
+    
+    try {
+      return [
+        { name: 'TSE Water Savings', value: currentMonthData.tseWaterSavings || 0, color: '#10b981' },
+        { name: 'Tanker Revenue', value: currentMonthData.tankerIncome || 0, color: '#f59e0b' }
+      ];
+    } catch (error) {
+      console.error('Error processing financial breakdown:', error);
+      return [];
+    }
+  }, [currentMonthData]);
+
+  // Enhanced data for interactive charts with error handling
   const enhancedMonthlyData = useMemo(() => {
-    return monthlyPerformanceData.map(month => {
-      // Calculate estimated tanker volume (assuming 20m³ per tanker trip)
-      const estimatedTankerVolume = month.totalTankers * 20;
-      // Calculate direct sewage as the difference
-      const directSewageVolume = month.totalProcessedWater - estimatedTankerVolume;
+    try {
+      if (!monthlyPerformanceData || monthlyPerformanceData.length === 0) {
+        return [];
+      }
       
-      return {
-        month: month.month,
-        monthShort: month.month.split(' ')[0],
-        monthKey: month.monthKey,
-        totalProcessedWater: month.totalProcessedWater,
-        totalTSEWater: month.totalTSEWater,
-        totalTreatedWater: month.totalTreatedWater,
-        tankerVolume: estimatedTankerVolume,
-        directSewageVolume: Math.max(0, directSewageVolume),
-        tankerPercentage: ((estimatedTankerVolume / month.totalProcessedWater) * 100).toFixed(1),
-        directSewagePercentage: ((directSewageVolume / month.totalProcessedWater) * 100).toFixed(1),
-        treatmentEfficiency: month.treatmentEfficiency,
-        operatingDays: month.operatingDays,
-        avgDailyProcessed: month.avgDailyProcessed,
-        avgDailyTSE: month.avgDailyTSE
-      };
-    });
+      return monthlyPerformanceData.map(month => {
+        // Calculate estimated tanker volume (assuming 20m³ per tanker trip)
+        const estimatedTankerVolume = (month.totalTankers || 0) * 20;
+        // Calculate direct sewage as the difference
+        const directSewageVolume = (month.totalProcessedWater || 0) - estimatedTankerVolume;
+        
+        return {
+          month: month.month || 'Unknown',
+          monthShort: month.month ? month.month.split(' ')[0] : 'Unknown',
+          monthKey: month.monthKey || '',
+          totalProcessedWater: month.totalProcessedWater || 0,
+          totalTSEWater: month.totalTSEWater || 0,
+          totalTreatedWater: month.totalTreatedWater || 0,
+          tankerVolume: estimatedTankerVolume,
+          directSewageVolume: Math.max(0, directSewageVolume),
+          tankerPercentage: month.totalProcessedWater ? ((estimatedTankerVolume / month.totalProcessedWater) * 100).toFixed(1) : '0',
+          directSewagePercentage: month.totalProcessedWater ? ((directSewageVolume / month.totalProcessedWater) * 100).toFixed(1) : '0',
+          treatmentEfficiency: month.treatmentEfficiency || 0,
+          operatingDays: month.operatingDays || 0,
+          avgDailyProcessed: month.avgDailyProcessed || 0,
+          avgDailyTSE: month.avgDailyTSE || 0
+        };
+      });
+    } catch (error) {
+      console.error('Error processing enhanced monthly data:', error);
+      return [];
+    }
   }, []);
 
   // Filtered data for selected months range
-  const [monthRange, setMonthRange] = useState({ start: 0, end: enhancedMonthlyData.length - 1 });
+  const [monthRange, setMonthRange] = useState({ start: 0, end: Math.max(0, enhancedMonthlyData.length - 1) });
   
   const filteredChartData = useMemo(() => {
-    return enhancedMonthlyData.slice(monthRange.start, monthRange.end + 1);
+    try {
+      if (!enhancedMonthlyData || enhancedMonthlyData.length === 0) {
+        return [];
+      }
+      return enhancedMonthlyData.slice(monthRange.start, monthRange.end + 1);
+    } catch (error) {
+      console.error('Error filtering chart data:', error);
+      return [];
+    }
   }, [enhancedMonthlyData, monthRange]);
+
+  // Update month range when data changes
+  React.useEffect(() => {
+    setMonthRange({ start: 0, end: Math.max(0, enhancedMonthlyData.length - 1) });
+  }, [enhancedMonthlyData.length]);
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard' },
@@ -198,6 +296,31 @@ const STPModule = () => {
     { id: 'financial', label: 'Financial Overview' },
     { id: 'annual', label: 'Annual Summary' }
   ];
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900">Error Loading STP Data</h3>
+          <p className="text-gray-500 mt-2">{error}</p>
+          <Button onClick={() => window.location.reload()} className="mt-4">
+            Reload Page
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const renderDashboard = () => (
     <div className="space-y-6">
@@ -299,7 +422,7 @@ const STPModule = () => {
           </div>
         </div>
         <div className="mt-3 text-sm text-gray-600">
-          Showing data from <span className="font-medium">{enhancedMonthlyData[monthRange.start]?.month}</span> to <span className="font-medium">{enhancedMonthlyData[monthRange.end]?.month}</span>
+          Showing data from <span className="font-medium">{enhancedMonthlyData[monthRange.start]?.month || 'Unknown'}</span> to <span className="font-medium">{enhancedMonthlyData[monthRange.end]?.month || 'Unknown'}</span>
         </div>
       </div>
 
@@ -315,7 +438,7 @@ const STPModule = () => {
         <div className="p-6">
           <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={filteredChartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+              <AreaChart data={filteredChartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                 <defs>
                   <linearGradient id="processedGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
@@ -356,22 +479,24 @@ const STPModule = () => {
                 <Area 
                   type="monotone" 
                   dataKey="totalProcessedWater" 
+                  stackId="1"
                   stroke="#3b82f6" 
-                  strokeWidth={3}
+                  strokeWidth={2}
                   fill="url(#processedGradient)"
-                  dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
+                  dot={{ fill: '#3b82f6', strokeWidth: 2, r: 3 }}
+                  activeDot={{ r: 5, stroke: '#3b82f6', strokeWidth: 2 }}
                 />
                 <Area 
                   type="monotone" 
                   dataKey="totalTSEWater" 
+                  stackId="2"
                   stroke="#10b981" 
-                  strokeWidth={3}
+                  strokeWidth={2}
                   fill="url(#tseGradient)"
-                  dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6, stroke: '#10b981', strokeWidth: 2 }}
+                  dot={{ fill: '#10b981', strokeWidth: 2, r: 3 }}
+                  activeDot={{ r: 5, stroke: '#10b981', strokeWidth: 2 }}
                 />
-              </LineChart>
+              </AreaChart>
             </ResponsiveContainer>
           </div>
           
@@ -379,25 +504,37 @@ const STPModule = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6 pt-6 border-t">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
-                {filteredChartData.reduce((sum, item) => sum + item.totalProcessedWater, 0).toLocaleString()}
+                {filteredChartData && filteredChartData.length > 0 
+                  ? filteredChartData.reduce((sum, item) => sum + (item.totalProcessedWater || 0), 0).toLocaleString()
+                  : '0'
+                }
               </div>
               <div className="text-sm text-gray-500">Total Processed (m³)</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
-                {filteredChartData.reduce((sum, item) => sum + item.totalTSEWater, 0).toLocaleString()}
+                {filteredChartData && filteredChartData.length > 0 
+                  ? filteredChartData.reduce((sum, item) => sum + (item.totalTSEWater || 0), 0).toLocaleString()
+                  : '0'
+                }
               </div>
               <div className="text-sm text-gray-500">Total TSE Generated (m³)</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">
-                {(filteredChartData.reduce((sum, item) => sum + item.treatmentEfficiency, 0) / filteredChartData.length).toFixed(1)}%
+                {filteredChartData && filteredChartData.length > 0 
+                  ? (filteredChartData.reduce((sum, item) => sum + (item.treatmentEfficiency || 0), 0) / filteredChartData.length).toFixed(1)
+                  : '0.0'
+                }%
               </div>
               <div className="text-sm text-gray-500">Average Efficiency</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-amber-600">
-                {filteredChartData.reduce((sum, item) => sum + item.operatingDays, 0)}
+                {filteredChartData && filteredChartData.length > 0 
+                  ? filteredChartData.reduce((sum, item) => sum + (item.operatingDays || 0), 0)
+                  : '0'
+                }
               </div>
               <div className="text-sm text-gray-500">Total Operating Days</div>
             </div>
@@ -508,10 +645,16 @@ const STPModule = () => {
                 <div>
                   <h4 className="text-sm font-medium text-purple-800">Tanker Input</h4>
                   <div className="text-2xl font-bold text-purple-600 mt-1">
-                    {filteredChartData.reduce((sum, item) => sum + item.tankerVolume, 0).toLocaleString()} m³
+                    {filteredChartData && filteredChartData.length > 0 
+                      ? filteredChartData.reduce((sum, item) => sum + (item.tankerVolume || 0), 0).toLocaleString()
+                      : '0'
+                    } m³
                   </div>
                   <div className="text-sm text-purple-600 mt-1">
-                    Avg: {(filteredChartData.reduce((sum, item) => sum + parseFloat(item.tankerPercentage), 0) / filteredChartData.length).toFixed(1)}%
+                    Avg: {filteredChartData && filteredChartData.length > 0 
+                      ? (filteredChartData.reduce((sum, item) => sum + parseFloat(item.tankerPercentage || 0), 0) / filteredChartData.length).toFixed(1)
+                      : '0.0'
+                    }%
                   </div>
                 </div>
                 <Trash2 className="h-8 w-8 text-purple-500" />
@@ -523,10 +666,16 @@ const STPModule = () => {
                 <div>
                   <h4 className="text-sm font-medium text-amber-800">Direct Sewage</h4>
                   <div className="text-2xl font-bold text-amber-600 mt-1">
-                    {filteredChartData.reduce((sum, item) => sum + item.directSewageVolume, 0).toLocaleString()} m³
+                    {filteredChartData && filteredChartData.length > 0 
+                      ? filteredChartData.reduce((sum, item) => sum + (item.directSewageVolume || 0), 0).toLocaleString()
+                      : '0'
+                    } m³
                   </div>
                   <div className="text-sm text-amber-600 mt-1">
-                    Avg: {(filteredChartData.reduce((sum, item) => sum + parseFloat(item.directSewagePercentage), 0) / filteredChartData.length).toFixed(1)}%
+                    Avg: {filteredChartData && filteredChartData.length > 0 
+                      ? (filteredChartData.reduce((sum, item) => sum + parseFloat(item.directSewagePercentage || 0), 0) / filteredChartData.length).toFixed(1)
+                      : '0.0'
+                    }%
                   </div>
                 </div>
                 <Factory className="h-8 w-8 text-amber-500" />
@@ -538,10 +687,13 @@ const STPModule = () => {
                 <div>
                   <h4 className="text-sm font-medium text-blue-800">Total Input</h4>
                   <div className="text-2xl font-bold text-blue-600 mt-1">
-                    {filteredChartData.reduce((sum, item) => sum + item.totalProcessedWater, 0).toLocaleString()} m³
+                    {filteredChartData && filteredChartData.length > 0 
+                      ? filteredChartData.reduce((sum, item) => sum + (item.totalProcessedWater || 0), 0).toLocaleString()
+                      : '0'
+                    } m³
                   </div>
                   <div className="text-sm text-blue-600 mt-1">
-                    {filteredChartData.length} months selected
+                    {filteredChartData ? filteredChartData.length : 0} months selected
                   </div>
                 </div>
                 <Droplets className="h-8 w-8 text-blue-500" />
@@ -575,26 +727,34 @@ const STPModule = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {monthlyPerformanceData.map((month, index) => (
-                <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{month.month}</td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{month.operatingDays}</td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{month.totalProcessedWater.toLocaleString()}</td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{month.totalTreatedWater.toLocaleString()}</td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{month.totalTSEWater.toLocaleString()}</td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      month.treatmentEfficiency > 110 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {month.treatmentEfficiency.toFixed(1)}%
-                    </span>
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{month.totalTankers}</td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
-                    {month.totalFinancialBenefit.toLocaleString()}
+              {monthlyPerformanceData && monthlyPerformanceData.length > 0 ? (
+                monthlyPerformanceData.map((month, index) => (
+                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{month.month || 'Unknown'}</td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{month.operatingDays || 0}</td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{(month.totalProcessedWater || 0).toLocaleString()}</td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{(month.totalTreatedWater || 0).toLocaleString()}</td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{(month.totalTSEWater || 0).toLocaleString()}</td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        (month.treatmentEfficiency || 0) > 110 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {(month.treatmentEfficiency || 0).toFixed(1)}%
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{month.totalTankers || 0}</td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
+                      {(month.totalFinancialBenefit || 0).toLocaleString()}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="8" className="px-4 py-8 text-center text-gray-500">
+                    No data available
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -602,16 +762,33 @@ const STPModule = () => {
 
       {/* Capacity Utilization Chart */}
       <ChartCard title="Monthly Capacity Utilization vs Design Capacity" className="h-80">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={monthlyTrendData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="capacityUtilization" fill="#6366f1" name="Capacity Utilization %" />
-            <Line y={100} stroke="#ef4444" strokeWidth={2} strokeDasharray="5 5" />
-          </BarChart>
-        </ResponsiveContainer>
+        {monthlyTrendData && monthlyTrendData.length > 0 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={monthlyTrendData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis domain={[0, 'dataMax + 10']} />
+              <Tooltip 
+                formatter={(value) => [`${value.toFixed(1)}%`, 'Capacity Utilization']}
+                labelFormatter={(label) => `Month: ${label}`}
+              />
+              <Bar 
+                dataKey="capacityUtilization" 
+                fill="#6366f1" 
+                name="Capacity Utilization %" 
+                radius={[4, 4, 0, 0]}
+              />
+              {/* Reference line indicator for 100% capacity */}
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+              <p className="text-gray-500">No chart data available</p>
+            </div>
+          </div>
+        )}
       </ChartCard>
     </div>
   );
@@ -781,70 +958,80 @@ const STPModule = () => {
   );
 
   return (
-    <div className="stp-module space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">STP Plant Operations</h1>
-          <p className="text-gray-600 mt-2">
-            Comprehensive monitoring of Sewage Treatment Plant performance based on actual operational data
-          </p>
-          <div className="flex items-center space-x-6 mt-3">
-            <div className="text-sm">
-              <span className="font-medium text-gray-700">Design Capacity:</span>
-              <span className="text-blue-600 font-semibold ml-1">{STP_DESIGN_CAPACITY} m³/day TSE</span>
-            </div>
-            <div className="text-sm">
-              <span className="font-medium text-gray-700">Revenue Model:</span>
-              <span className="text-green-600 font-semibold ml-1">{TANKER_INCOME_PER_TRIP} OMR/trip + {TSE_SAVING_PER_M3} OMR/m³ TSE</span>
+    <ErrorBoundary>
+      <div className="stp-module space-y-6">
+        {/* Page Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">STP Plant Operations</h1>
+            <p className="text-gray-600 mt-2">
+              Comprehensive monitoring of Sewage Treatment Plant performance based on actual operational data
+            </p>
+            <div className="flex items-center space-x-6 mt-3">
+              <div className="text-sm">
+                <span className="font-medium text-gray-700">Design Capacity:</span>
+                <span className="text-blue-600 font-semibold ml-1">{STP_DESIGN_CAPACITY} m³/day TSE</span>
+              </div>
+              <div className="text-sm">
+                <span className="font-medium text-gray-700">Revenue Model:</span>
+                <span className="text-green-600 font-semibold ml-1">{TANKER_INCOME_PER_TRIP} OMR/trip + {TSE_SAVING_PER_M3} OMR/m³ TSE</span>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-sm font-medium text-green-600">Plant Operational</span>
-          </div>
-          <select 
-            value={selectedMonth} 
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-          >
-            {availableMonths.map(option => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Navigation Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`${
-                activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200`}
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-sm font-medium text-green-600">Plant Operational</span>
+            </div>
+            <select 
+              value={selectedMonth} 
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
+              {availableMonths.map(option => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
 
-      {/* Tab Content */}
-      <div className="tab-content">
-        {activeTab === 'dashboard' && renderDashboard()}
-        {activeTab === 'analytics' && renderAdvancedAnalytics()}
-        {activeTab === 'monthly' && renderMonthlyAnalysis()}
-        {activeTab === 'financial' && renderFinancialOverview()}
-        {activeTab === 'annual' && renderAnnualSummary()}
+        {/* Navigation Tabs */}
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  try {
+                    setActiveTab(tab.id);
+                  } catch (error) {
+                    console.error('Error switching tabs:', error);
+                  }
+                }}
+                className={`${
+                  activeTab === tab.id
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Tab Content */}
+        <div className="tab-content">
+          <ErrorBoundary>
+            {activeTab === 'dashboard' && renderDashboard()}
+            {activeTab === 'analytics' && renderAdvancedAnalytics()}
+            {activeTab === 'monthly' && renderMonthlyAnalysis()}
+            {activeTab === 'financial' && renderFinancialOverview()}
+            {activeTab === 'annual' && renderAnnualSummary()}
+          </ErrorBoundary>
+        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 };
 
