@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import { 
   Droplets, CalendarDays, Building, Filter, CheckCircle, AlertCircle, 
-  TrendingUp, Users2, Sparkles, X, LayoutDashboard, BarChart2 
+  TrendingUp, Users2, Sparkles, X, LayoutDashboard, BarChart2, Database
 } from 'lucide-react';
 import { 
   waterSystemData, 
@@ -18,6 +18,23 @@ import {
   getZoneAnalysis,
   getAvailableZones
 } from '../../../Database/waterDatabase.js';
+import {
+  getZoneWiseConsumption,
+  getZoneLossAnalysis,
+  getZoneStats,
+  getZoneCustomerDetails,
+  getAvailableZoneDetails,
+  getAvailableMonths
+} from '../../services/zoneDetailsService.js';
+import {
+  getMonthlyOverviewStats,
+  getYearlyOverviewStats,
+  getLossTrendData,
+  getWaterFlowData,
+  getConsumerCategoryData,
+  getOverviewMonths,
+  getOverviewYears
+} from '../../services/waterOverviewService.js';
 import GaugeChart from '../ui/GaugeChart';
 import MetricCard from '../ui/MetricCard';
 import ChartCard from '../ui/ChartCard';
@@ -47,6 +64,14 @@ const WaterAnalysisModule = () => {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  
+  // Zone Details Analysis state
+  const [selectedZoneDetails, setSelectedZoneDetails] = useState('ZONE_FM');
+  const [selectedDetailsMonth, setSelectedDetailsMonth] = useState('May-25');
+  
+  // Water Distribution Overview state
+  const [selectedOverviewMonth, setSelectedOverviewMonth] = useState('May-25');
+  const [selectedOverviewYear, setSelectedOverviewYear] = useState('2025');
 
   // Reset pagination when zone changes
   useEffect(() => {
@@ -254,7 +279,9 @@ Total System Loss: Overall water loss calculation with efficiency metrics
       { name: 'Overview', id: 'Overview', icon: LayoutDashboard },
       { name: 'Water Loss Analysis', id: 'WaterLoss', icon: TrendingUp },
       { name: 'Zone Analysis', id: 'ZoneAnalysis', icon: BarChart2 },
-      { name: 'Quality Metrics', id: 'Quality', icon: CheckCircle },
+      { name: 'Zone Details', id: 'ZoneDetails', icon: Database },
+      { name: 'Main Database', id: 'MainDatabase', icon: Database },
+      { name: 'Overview', id: 'Overview_New', icon: CheckCircle },
     ];
     
     return (
@@ -1028,73 +1055,646 @@ Total System Loss: Overall water loss calculation with efficiency metrics
         </>
       )}
 
-      {activeWaterSubSection === 'Quality' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ChartCard title="Water Quality Parameters" subtitle="Current quality metrics">
-            <div className="space-y-4 mt-4">
-              {waterQualityParameters.map((param, index) => (
-                <div key={index} className="flex justify-between items-center p-4 bg-slate-50 rounded-lg">
-                  <div>
-                    <h4 className="font-medium text-slate-700">{param.parameter}</h4>
-                    <p className="text-sm text-slate-500">Range: {param.range}</p>
+      {activeWaterSubSection === 'Overview_New' && (
+        <>
+          {/* Overview Filter Section */}
+          <div className="bg-white shadow p-4 rounded-lg mb-6 print:hidden border border-slate-200">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Select Month</label>
+                <div className="relative">
+                  <select 
+                    value={selectedOverviewMonth} 
+                    onChange={(e) => setSelectedOverviewMonth(e.target.value)} 
+                    className="appearance-none w-full p-2.5 pr-10 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:outline-none bg-white text-slate-700"
+                  >
+                    {getOverviewMonths().map(month => ( 
+                      <option key={month} value={month}>{month}</option> 
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                    <CalendarDays size={16} />
                   </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-slate-800">{param.value} {param.unit}</p>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      param.status === 'good' ? 'bg-green-100 text-green-800' :
-                      param.status === 'normal' ? 'bg-blue-100 text-blue-800' :
-                      'bg-orange-100 text-orange-800'
-                    }`}>
-                      {param.status.toUpperCase()}
-                    </span>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Select Year</label>
+                <div className="relative">
+                  <select 
+                    value={selectedOverviewYear} 
+                    onChange={(e) => setSelectedOverviewYear(e.target.value)} 
+                    className="appearance-none w-full p-2.5 pr-10 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:outline-none bg-white text-slate-700"
+                  >
+                    {getOverviewYears().map(year => ( 
+                      <option key={year} value={year}>{year}</option> 
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                    <CalendarDays size={16} />
+                  </div>
+                </div>
+              </div>
+              
+              <button 
+                onClick={() => {
+                  setSelectedOverviewMonth('May-25');
+                  setSelectedOverviewYear('2025');
+                }} 
+                className="text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 h-[46px] w-full hover:shadow-lg" 
+                style={{ backgroundColor: COLORS.primaryDark }} 
+              > 
+                <Filter size={16}/> 
+                <span>Reset Filters</span> 
+              </button>
+            </div>
+          </div>
+
+          {/* Monthly and Yearly Gauge Statistics */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {/* Monthly Statistics */}
+            {(() => {
+              const monthlyStats = getMonthlyOverviewStats(selectedOverviewMonth);
+              if (!monthlyStats) return null;
+
+              return (
+                <ChartCard title={`${selectedOverviewMonth} Statistics`} subtitle="Monthly water distribution overview">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    <GaugeChart
+                      percentage={100}
+                      value={monthlyStats.mainBulk}
+                      title="A1: Main Bulk"
+                      subtitle="Total Supply (L1)"
+                      color="#22c55e"
+                      size={120}
+                    />
+                    <GaugeChart
+                      percentage={monthlyStats.mainBulk > 0 ? (monthlyStats.billedBulk / monthlyStats.mainBulk) * 100 : 0}
+                      value={monthlyStats.billedBulk}
+                      title="A2: Billed Bulk"
+                      subtitle="Distribution (L2+DC)"
+                      color="#f97316"
+                      size={120}
+                    />
+                    <GaugeChart
+                      percentage={monthlyStats.mainBulk > 0 ? (monthlyStats.billedIndividual / monthlyStats.mainBulk) * 100 : 0}
+                      value={monthlyStats.billedIndividual}
+                      title="A3: Billed Individual"
+                      subtitle="Consumption (L3+DC)"
+                      color="#3b82f6"
+                      size={120}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                    <div className="text-center p-3 bg-red-50 rounded-lg">
+                      <p className="text-sm font-medium text-red-800">Loss 1 (A1-A2)</p>
+                      <p className="text-lg font-bold text-red-600">{monthlyStats.loss1.toLocaleString()} m³</p>
+                      <p className="text-xs text-red-500">{monthlyStats.loss1Percent.toFixed(1)}%</p>
+                    </div>
+                    <div className="text-center p-3 bg-orange-50 rounded-lg">
+                      <p className="text-sm font-medium text-orange-800">Loss 2 (A2-A3)</p>
+                      <p className="text-lg font-bold text-orange-600">{monthlyStats.loss2.toLocaleString()} m³</p>
+                      <p className="text-xs text-orange-500">{monthlyStats.loss2Percent.toFixed(1)}%</p>
+                    </div>
+                    <div className="text-center p-3 bg-red-50 rounded-lg">
+                      <p className="text-sm font-medium text-red-800">Total Loss</p>
+                      <p className="text-lg font-bold text-red-600">{monthlyStats.totalLoss.toLocaleString()} m³</p>
+                      <p className="text-xs text-red-500">{monthlyStats.totalLossPercent.toFixed(1)}%</p>
+                    </div>
+                  </div>
+                </ChartCard>
+              );
+            })()}
+
+            {/* Yearly Statistics */}
+            {(() => {
+              const yearlyStats = getYearlyOverviewStats(selectedOverviewYear);
+              if (!yearlyStats) return null;
+
+              return (
+                <ChartCard title={`${selectedOverviewYear} Related Year`} subtitle="Annual water distribution overview">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    <GaugeChart
+                      percentage={100}
+                      value={yearlyStats.mainBulk}
+                      title="Annual Main Bulk"
+                      subtitle="Total Supply (L1)"
+                      color="#16a34a"
+                      size={120}
+                    />
+                    <GaugeChart
+                      percentage={yearlyStats.mainBulk > 0 ? (yearlyStats.billedBulk / yearlyStats.mainBulk) * 100 : 0}
+                      value={yearlyStats.billedBulk}
+                      title="Annual Billed Bulk"
+                      subtitle="Distribution (L2+DC)"
+                      color="#ea580c"
+                      size={120}
+                    />
+                    <GaugeChart
+                      percentage={yearlyStats.mainBulk > 0 ? (yearlyStats.billedIndividual / yearlyStats.mainBulk) * 100 : 0}
+                      value={yearlyStats.billedIndividual}
+                      title="Annual Individual"
+                      subtitle="Consumption (L3+DC)"
+                      color="#2563eb"
+                      size={120}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                    <div className="text-center p-3 bg-red-50 rounded-lg">
+                      <p className="text-sm font-medium text-red-800">Annual Loss 1</p>
+                      <p className="text-lg font-bold text-red-600">{yearlyStats.loss1.toLocaleString()} m³</p>
+                      <p className="text-xs text-red-500">{yearlyStats.loss1Percent.toFixed(1)}%</p>
+                    </div>
+                    <div className="text-center p-3 bg-orange-50 rounded-lg">
+                      <p className="text-sm font-medium text-orange-800">Annual Loss 2</p>
+                      <p className="text-lg font-bold text-orange-600">{yearlyStats.loss2.toLocaleString()} m³</p>
+                      <p className="text-xs text-orange-500">{yearlyStats.loss2Percent.toFixed(1)}%</p>
+                    </div>
+                    <div className="text-center p-3 bg-red-50 rounded-lg">
+                      <p className="text-sm font-medium text-red-800">Annual Total Loss</p>
+                      <p className="text-lg font-bold text-red-600">{yearlyStats.totalLoss.toLocaleString()} m³</p>
+                      <p className="text-xs text-red-500">{yearlyStats.totalLossPercent.toFixed(1)}%</p>
+                    </div>
+                  </div>
+                </ChartCard>
+              );
+            })()}
+          </div>
+
+          {/* Loss Trend Analysis and Water Flow Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <ChartCard title="Loss Trend Analysis (m³)" subtitle="Loss progression over last 6 months">
+              <ResponsiveContainer width="100%" height={350}>
+                <LineChart data={getLossTrendData()}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="Loss 1 (A1-A2)" 
+                    stroke="#dc2626" 
+                    strokeWidth={3}
+                    dot={{ fill: '#dc2626', strokeWidth: 2 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="Loss 2 (A2-A3)" 
+                    stroke="#ea580c" 
+                    strokeWidth={3}
+                    dot={{ fill: '#ea580c', strokeWidth: 2 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="Total Apparent Loss" 
+                    stroke="#991b1b" 
+                    strokeWidth={4}
+                    dot={{ fill: '#991b1b', strokeWidth: 2 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </ChartCard>
+
+            <ChartCard title="Water Flow by Level (Last 6 Months)" subtitle="Water distribution hierarchy trends">
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={getWaterFlowData()}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar 
+                    dataKey="A1: Main Bulk (L1)" 
+                    fill="#22c55e" 
+                    name="A1: Main Bulk (L1)"
+                  />
+                  <Bar 
+                    dataKey="A2: Billed Bulk (L2+DC)" 
+                    fill="#f97316" 
+                    name="A2: Billed Bulk (L2+DC)"
+                  />
+                  <Bar 
+                    dataKey="A3: Billed Indiv. (L3+DC)" 
+                    fill="#3b82f6" 
+                    name="A3: Billed Indiv. (L3+DC)"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartCard>
+          </div>
+
+          {/* Consumer Category Distribution */}
+          <ChartCard title="Consumer Category Distribution" subtitle={`Distribution of consumption by customer type for ${selectedOverviewMonth}`}>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart 
+                data={getConsumerCategoryData(selectedOverviewMonth)} 
+                layout="horizontal"
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
+                <YAxis type="category" dataKey="category" width={120} />
+                <Tooltip formatter={(value) => [`${value.toFixed(1)}%`, 'Percentage']} />
+                <Bar dataKey="value" fill={COLORS.accent} name="Distribution %" />
+              </BarChart>
+            </ResponsiveContainer>
+            
+            {/* Consumer Distribution Summary */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+              {getConsumerCategoryData(selectedOverviewMonth).map((item, index) => (
+                <div key={index} className="text-center p-3 bg-slate-50 rounded-lg">
+                  <p className="text-sm font-medium text-slate-700">{item.category}</p>
+                  <p className="text-xl font-bold text-blue-600">{item.value.toFixed(1)}%</p>
+                  <div className="w-full bg-slate-200 rounded-full h-2 mt-2">
+                    <div 
+                      className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${item.value}%` }}
+                    ></div>
                   </div>
                 </div>
               ))}
             </div>
           </ChartCard>
+        </>
+      )}
 
-          <ChartCard title="System Performance Indicators" subtitle="Key operational metrics">
-            <div className="space-y-4 mt-4">
-              <div className="p-4 bg-slate-50 rounded-lg">
-                <div className="flex justify-between items-center mb-2">
-                  <h4 className="font-medium text-slate-700">System Efficiency</h4>
-                  <span className="text-lg font-bold text-green-600">{waterCalculations.systemEfficiency.toFixed(1)}%</span>
-                </div>
-                <div className="w-full bg-slate-200 rounded-full h-3">
-                  <div 
-                    className="bg-green-500 h-3 rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min(waterCalculations.systemEfficiency, 100)}%` }}
-                  ></div>
+      {activeWaterSubSection === 'ZoneDetails' && (
+        <>
+          {/* Zone Details Filter Section */}
+          <div className="bg-white shadow p-4 rounded-lg mb-6 print:hidden border border-slate-200">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Select Month</label>
+                <div className="relative">
+                  <select 
+                    value={selectedDetailsMonth} 
+                    onChange={(e) => setSelectedDetailsMonth(e.target.value)} 
+                    className="appearance-none w-full p-2.5 pr-10 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:outline-none bg-white text-slate-700"
+                  >
+                    {getAvailableMonths().map(month => ( 
+                      <option key={month} value={month}>{month}</option> 
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                    <CalendarDays size={16} />
+                  </div>
                 </div>
               </div>
-
-              <div className="p-4 bg-slate-50 rounded-lg">
-                <div className="flex justify-between items-center mb-2">
-                  <h4 className="font-medium text-slate-700">System Variance</h4>
-                  <span className="text-lg font-bold text-green-600">
-                    {Math.abs(waterCalculations.totalLossPercent).toFixed(1)}%
-                  </span>
-                </div>
-                <div className="w-full bg-slate-200 rounded-full h-3">
-                  <div 
-                    className="bg-green-500 h-3 rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min(Math.abs(waterCalculations.totalLossPercent) * 4, 100)}%` }}
-                  ></div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Select Zone</label>
+                <div className="relative">
+                  <select 
+                    value={selectedZoneDetails} 
+                    onChange={(e) => setSelectedZoneDetails(e.target.value)} 
+                    className="appearance-none w-full p-2.5 pr-10 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:outline-none bg-white text-slate-700"
+                  >
+                    {getAvailableZoneDetails().map(zone => ( 
+                      <option key={zone.key} value={zone.key}>{zone.name}</option> 
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                    <Building size={16} />
+                  </div>
                 </div>
               </div>
+              
+              <button 
+                onClick={() => {
+                  setSelectedDetailsMonth('May-25');
+                  setSelectedZoneDetails('ZONE_FM');
+                }} 
+                className="text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 h-[46px] w-full hover:shadow-lg" 
+                style={{ backgroundColor: COLORS.primaryDark }} 
+              > 
+                <Filter size={16}/> 
+                <span>Reset Filters</span> 
+              </button>
+            </div>
+          </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 bg-blue-50 rounded-lg text-center">
-                  <p className="text-xs text-blue-600 uppercase tracking-wide">Total Meters</p>
-                  <p className="text-xl font-bold text-blue-800">{waterSystemData.length}</p>
+          {/* Zone-wise Consumption Chart */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <ChartCard title="Zone-wise Consumption" subtitle={`Water consumption by zone for ${selectedDetailsMonth}`}>
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={getZoneWiseConsumption(selectedDetailsMonth)}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="zone" 
+                    angle={-45}
+                    textAnchor="end"
+                    height={100}
+                    fontSize={10}
+                  />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="consumption" fill={COLORS.primary} name="Consumption (m³)" />
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartCard>
+
+            <ChartCard title="Zone Loss Analysis" subtitle={`Loss percentage by zone for ${selectedDetailsMonth}`}>
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={getZoneLossAnalysis(selectedDetailsMonth)}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="zone" 
+                    angle={-45}
+                    textAnchor="end"
+                    height={100}
+                    fontSize={10}
+                  />
+                  <YAxis />
+                  <Tooltip formatter={(value) => [`${value.toFixed(1)}%`, 'Loss Percentage']} />
+                  <Bar dataKey="systemLossContribution" fill={COLORS.error} name="System Loss Contribution (%)" />
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartCard>
+          </div>
+
+          {/* Zone Statistics Gauges */}
+          {(() => {
+            const zoneStats = getZoneStats(selectedZoneDetails, selectedDetailsMonth);
+            if (!zoneStats) return null;
+
+            return (
+              <>
+                <div className="mb-6 text-center">
+                  <h2 className="text-2xl font-bold text-slate-800 mb-2">
+                    {zoneStats.zone} Statistics for {selectedDetailsMonth}
+                  </h2>
+                  <p className="text-slate-600">
+                    Bulk Meter: {zoneStats.bulkMeter}
+                  </p>
                 </div>
-                <div className="p-3 bg-purple-50 rounded-lg text-center">
-                  <p className="text-xs text-purple-600 uppercase tracking-wide">Zone Meters</p>
-                  <p className="text-xl font-bold text-purple-800">{waterCalculations.zoneBulkMeters.length}</p>
+
+                {/* Monthly Stats */}
+                <div className="mb-8">
+                  <h3 className="text-lg font-semibold text-slate-700 mb-4">Monthly Statistics</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white p-6 rounded-lg shadow border border-slate-200">
+                    <GaugeChart
+                      percentage={100}
+                      value={zoneStats.monthly.bulkSupply}
+                      title="Total Bulk Supply"
+                      subtitle="Zone Bulk Consumption"
+                      color="#3b82f6"
+                      size={140}
+                    />
+                    <GaugeChart
+                      percentage={zoneStats.monthly.bulkSupply > 0 ? (zoneStats.monthly.individualTotal / zoneStats.monthly.bulkSupply) * 100 : 0}
+                      value={zoneStats.monthly.individualTotal}
+                      title="Individual Total"
+                      subtitle="Sum of Individual Meters"
+                      color="#10b981"
+                      size={140}
+                    />
+                    <GaugeChart
+                      percentage={Math.abs(zoneStats.monthly.lossPercent)}
+                      value={Math.abs(zoneStats.monthly.loss)}
+                      title="Zone Loss"
+                      subtitle={`${Math.abs(zoneStats.monthly.lossPercent).toFixed(1)}% Loss`}
+                      color={zoneStats.monthly.loss < 0 ? "#f59e0b" : "#ef4444"}
+                      size={140}
+                    />
+                  </div>
+                </div>
+
+                {/* Yearly Stats */}
+                <div className="mb-8">
+                  <h3 className="text-lg font-semibold text-slate-700 mb-4">Yearly Statistics</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white p-6 rounded-lg shadow border border-slate-200">
+                    <GaugeChart
+                      percentage={100}
+                      value={zoneStats.yearly.bulkSupply}
+                      title="Yearly Bulk Supply"
+                      subtitle="Total Zone Supply"
+                      color="#6366f1"
+                      size={140}
+                    />
+                    <GaugeChart
+                      percentage={zoneStats.yearly.bulkSupply > 0 ? (zoneStats.yearly.individualTotal / zoneStats.yearly.bulkSupply) * 100 : 0}
+                      value={zoneStats.yearly.individualTotal}
+                      title="Yearly Individual Total"
+                      subtitle="Sum of All Customers"
+                      color="#8b5cf6"
+                      size={140}
+                    />
+                    <GaugeChart
+                      percentage={Math.abs(zoneStats.yearly.lossPercent)}
+                      value={Math.abs(zoneStats.yearly.loss)}
+                      title="Yearly Loss"
+                      subtitle={`${Math.abs(zoneStats.yearly.lossPercent).toFixed(1)}% Annual Loss`}
+                      color={zoneStats.yearly.loss < 0 ? "#f59e0b" : "#dc2626"}
+                      size={140}
+                    />
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+
+          {/* Customer Details Table */}
+          {(() => {
+            const customerDetails = getZoneCustomerDetails(selectedZoneDetails, selectedDetailsMonth);
+            if (!customerDetails) return null;
+
+            return (
+              <div className="bg-white shadow rounded-lg border border-slate-200">
+                <div className="p-6 border-b border-slate-200">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-800">
+                        Customer Details - {customerDetails.zone} for {customerDetails.month}
+                      </h3>
+                      <p className="text-sm text-slate-600 mt-1">
+                        Bulk Meter: {customerDetails.bulkMeter} • {customerDetails.customers.length} customers
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        <th className="text-left p-4 font-semibold text-slate-700">Parent Meter</th>
+                        <th className="text-left p-4 font-semibold text-slate-700">Account</th>
+                        <th className="text-left p-4 font-semibold text-slate-700">Customer</th>
+                        <th className="text-right p-4 font-semibold text-slate-700">Consumption (m³)</th>
+                        <th className="text-center p-4 font-semibold text-slate-700">Type</th>
+                        <th className="text-center p-4 font-semibold text-slate-700">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {customerDetails.customers.map((customer, index) => (
+                        <tr key={customer.account} className="border-b border-slate-100 hover:bg-slate-50">
+                          <td className="p-4 text-slate-600">{customerDetails.bulkMeter}</td>
+                          <td className="p-4 font-medium text-slate-800">{customer.account}</td>
+                          <td className="p-4 text-slate-600">{customer.name}</td>
+                          <td className="p-4 text-right font-semibold text-slate-800">
+                            {customer.currentConsumption.toLocaleString()}
+                          </td>
+                          <td className="p-4 text-center">
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${
+                              customer.type === 'Commercial' ? 'bg-purple-100 text-purple-800' :
+                              customer.type === 'Residential' ? 'bg-green-100 text-green-800' :
+                              'bg-blue-100 text-blue-800'
+                            }`}>
+                              {customer.type}
+                            </span>
+                          </td>
+                          <td className="p-4 text-center">
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${
+                              customer.currentConsumption === 0 ? 'bg-gray-100 text-gray-800' :
+                              customer.currentConsumption > 200 ? 'bg-red-100 text-red-800' :
+                              customer.currentConsumption > 100 ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-green-100 text-green-800'
+                            }`}>
+                              {customer.currentConsumption === 0 ? 'No Usage' :
+                               customer.currentConsumption > 200 ? 'High' :
+                               customer.currentConsumption > 100 ? 'Medium' : 'Normal'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Summary Footer */}
+                <div className="p-4 bg-slate-50 border-t border-slate-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                    <div className="text-center">
+                      <p className="font-semibold text-slate-800">Total Customers</p>
+                      <p className="text-xl font-bold text-blue-600">
+                        {customerDetails.customers.length}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="font-semibold text-slate-800">Total Consumption</p>
+                      <p className="text-xl font-bold text-green-600">
+                        {customerDetails.customers.reduce((sum, customer) => sum + customer.currentConsumption, 0).toLocaleString()} m³
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="font-semibold text-slate-800">Average per Customer</p>
+                      <p className="text-xl font-bold text-purple-600">
+                        {customerDetails.customers.length > 0 ? 
+                          (customerDetails.customers.reduce((sum, customer) => sum + customer.currentConsumption, 0) / customerDetails.customers.length).toFixed(1) : 
+                          0
+                        } m³
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </>
+      )}
+
+      {/* Main Database Section */}
+      {activeWaterSubSection === 'MainDatabase' && (
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 border border-slate-200 dark:border-gray-600 transition-colors duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                  <Database className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-800 dark:text-white">Main Water Database</h2>
+                  <p className="text-sm text-slate-600 dark:text-gray-300">Comprehensive water system data management</p>
                 </div>
               </div>
             </div>
-          </ChartCard>
+          </div>
+
+          {/* Airtable Embed */}
+          <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg border border-slate-200 dark:border-gray-600 transition-colors duration-300 overflow-hidden">
+            <div className="p-4 border-b border-slate-200 dark:border-gray-600">
+              <h3 className="text-lg font-semibold text-slate-800 dark:text-white flex items-center">
+                <Database className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
+                Water System Database
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-gray-300 mt-1">
+                Real-time water system data and analytics
+              </p>
+            </div>
+            
+            <div className="relative" style={{ minHeight: '600px' }}>
+              <iframe 
+                className="airtable-embed w-full h-full border-0" 
+                src="https://airtable.com/embed/appwGy1JHL1UYsO2W/shrjrIEpBjAANAxZy?viewControls=on" 
+                style={{ 
+                  background: 'transparent',
+                  width: '100%',
+                  height: '533px',
+                  minHeight: '533px'
+                }}
+                title="Water System Main Database"
+              />
+            </div>
+          </div>
+
+          {/* Additional Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 border border-slate-200 dark:border-gray-600 transition-colors duration-300">
+              <h4 className="text-lg font-semibold text-slate-800 dark:text-white mb-3 flex items-center">
+                <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
+                Database Features
+              </h4>
+              <ul className="space-y-2 text-sm text-slate-600 dark:text-gray-300">
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
+                  Real-time water consumption monitoring
+                </li>
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-green-600 rounded-full mr-2"></span>
+                  Zone-wise water distribution tracking
+                </li>
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-purple-600 rounded-full mr-2"></span>
+                  Customer billing and account management
+                </li>
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-orange-600 rounded-full mr-2"></span>
+                  Water loss analysis and reporting
+                </li>
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-red-600 rounded-full mr-2"></span>
+                  Maintenance and operational logs
+                </li>
+              </ul>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 border border-slate-200 dark:border-gray-600 transition-colors duration-300">
+              <h4 className="text-lg font-semibold text-slate-800 dark:text-white mb-3 flex items-center">
+                <AlertCircle className="w-5 h-5 mr-2 text-blue-600" />
+                Database Access
+              </h4>
+              <div className="space-y-3 text-sm text-slate-600 dark:text-gray-300">
+                <p>
+                  This database contains comprehensive water system data including meter readings, 
+                  customer information, and operational metrics.
+                </p>
+                <p>
+                  Use the embedded interface above to view, filter, and analyze the water system data. 
+                  The database supports real-time updates and collaborative data management.
+                </p>
+                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <p className="text-blue-800 dark:text-blue-200 text-xs">
+                    <strong>Note:</strong> Data is synchronized with the main water management system 
+                    and updates automatically to reflect current system status.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
