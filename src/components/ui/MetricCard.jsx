@@ -1,4 +1,5 @@
 import React from 'react';
+import { TooltipIcon } from './Tooltip';
 
 const MetricCard = ({ 
   title, 
@@ -7,17 +8,19 @@ const MetricCard = ({
   subtitle,
   icon: Icon,
   iconColor,
-  isPrimary = false 
+  isPrimary = false,
+  tooltip
 }) => {
   return (
     <div 
       className={`kpi-card ${isPrimary ? 'primary' : ''}`}
     >
       <div className="flex items-start justify-between mb-2">
-        <div className="flex-1">
+        <div className="flex-1 flex items-center space-x-2">
           <h3 className="kpi-card-title">
             {title}
           </h3>
+          {tooltip && <TooltipIcon content={tooltip} />}
         </div>
         {Icon && (
           <Icon className={`w-5 h-5 ${iconColor || 'text-gray-400'}`} />

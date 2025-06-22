@@ -1,7 +1,6 @@
-// STP Real Database Service - Monthly Performance Summary Data
+// STP Monthly Performance Summary Service
 // Based on actual operational data from July 2024 to June 2025
 // STP Plant Design Capacity: 750 m³ TSE Water daily
-// Financial Parameters: Variable based on actual performance
 
 const TANKER_INCOME_PER_TRIP = 4.5; // OMR per tanker trip
 const TSE_SAVING_PER_M3 = 1.32; // OMR savings per m³ of TSE irrigation

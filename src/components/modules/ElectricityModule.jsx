@@ -42,6 +42,55 @@ const ElectricityModule = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(6);
 
+  // Helper function to convert data to CSV
+  const convertToCSV = (data) => {
+    const summary = `Summary\nTotal Consumption,${data.summary.totalConsumption} kWh\nTotal Cost,${data.summary.totalCost} OMR\nActive Meters,${data.summary.activeMeters}\nAverage Consumption,${data.summary.averageConsumption} kWh\n\n`;
+    
+    const consumersHeader = 'Top Consumers\nName,Meter,Type,Consumption (kWh),Cost (OMR),Performance (%)\n';
+    const consumersData = data.topConsumers.map(c => 
+      `${c.name},${c.meter},${c.type},${c.consumption},${c.cost.toFixed(2)},${c.efficiency}`
+    ).join('\n');
+    
+    return summary + consumersHeader + consumersData;
+  };
+
+  // Helper function to generate AI analysis
+  const generateAIAnalysis = (data) => {
+    const highConsumers = data.topConsumers.filter(c => c.consumption > data.averageConsumption * 2);
+    const lowPerformers = data.topConsumers.filter(c => c.efficiency < 60);
+    const avgCost = data.totalCost / data.activeMeters;
+    
+    let analysis = `📊 ELECTRICITY CONSUMPTION ANALYSIS\n\n`;
+    analysis += `🔋 Total Consumption: ${Math.round(data.totalConsumption).toLocaleString()} kWh\n`;
+    analysis += `💰 Total Cost: ${data.totalCost.toFixed(2)} OMR\n`;
+    analysis += `📏 Average per Unit: ${Math.round(data.averageConsumption)} kWh\n\n`;
+    
+    analysis += `🚨 HIGH CONSUMERS (Above 2x Average):\n`;
+    if (highConsumers.length > 0) {
+      highConsumers.slice(0, 3).forEach(c => {
+        analysis += `• ${c.name}: ${Math.round(c.consumption).toLocaleString()} kWh\n`;
+      });
+    } else {
+      analysis += `• No units significantly above average\n`;
+    }
+    
+    analysis += `\n⚠️ PERFORMANCE CONCERNS:\n`;
+    if (lowPerformers.length > 0) {
+      lowPerformers.slice(0, 3).forEach(c => {
+        analysis += `• ${c.name}: ${c.efficiency}% efficiency\n`;
+      });
+    } else {
+      analysis += `• All units performing within acceptable range\n`;
+    }
+    
+    analysis += `\n💡 RECOMMENDATIONS:\n`;
+    analysis += `• Monitor high consumers for optimization opportunities\n`;
+    analysis += `• Review units with <60% performance rating\n`;
+    analysis += `• Average cost per unit: ${avgCost.toFixed(2)} OMR\n`;
+    
+    return analysis;
+  };
+
   // Load electricity data from Excel file
   useEffect(() => {
     loadElectricityData();
@@ -163,6 +212,11 @@ const ElectricityModule = () => {
           });
         }
 
+        // Calculate performance based on consumption relative to category average
+        const categoryAverage = baseData.averageConsumption;
+        const performanceScore = categoryAverage > 0 ? 
+          Math.min(100, Math.max(30, 100 - ((record.totalConsumption - categoryAverage) / categoryAverage * 50))) : 85;
+
         // Add to top consumers
         filteredData.topConsumers.push({
           name: record.Name,
@@ -171,7 +225,7 @@ const ElectricityModule = () => {
           category: record.category,
           consumption: record.totalConsumption,
           cost: record.totalCost,
-          efficiency: record.efficiency || 85
+          efficiency: Math.round(performanceScore)
         });
       }
     });
@@ -277,11 +331,52 @@ const ElectricityModule = () => {
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="secondary" size="sm">
+          <Button 
+            variant="secondary" 
+            size="sm"
+            action={() => {
+              // Export functionality
+              const data = getCurrentData();
+              const exportData = {
+                summary: {
+                  totalConsumption: data.totalConsumption,
+                  totalCost: data.totalCost,
+                  activeMeters: data.activeMeters,
+                  averageConsumption: data.averageConsumption
+                },
+                topConsumers: data.topConsumers.slice(0, 10),
+                consumptionTrend: data.consumptionTrend,
+                exportDate: new Date().toISOString(),
+                filters: {
+                  month: selectedMonth,
+                  category: selectedCategory,
+                  zone: selectedZone
+                }
+              };
+              
+              // Create and download CSV
+              const csv = convertToCSV(exportData);
+              const blob = new Blob([csv], { type: 'text/csv' });
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `electricity-data-${new Date().toISOString().split('T')[0]}.csv`;
+              a.click();
+              window.URL.revokeObjectURL(url);
+            }}
+          >
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
-          <Button variant="primary">
+          <Button 
+            variant="primary"
+            action={() => {
+              // AI Analysis functionality
+              const data = getCurrentData();
+              const analysisResults = generateAIAnalysis(data);
+              alert(`AI Analysis Results:\n\n${analysisResults}`);
+            }}
+          >
             <Brain className="w-4 h-4 mr-2" />
             AI Analysis
           </Button>
@@ -478,25 +573,27 @@ const ElectricityModule = () => {
               <p className="text-sm text-gray-600">Distribution by category</p>
             </div>
           </div>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={categoryData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={100}
-                  paddingAngle={2}
-                  dataKey="value"
-                >
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => `${value.toLocaleString()} kWh`} />
-              </PieChart>
-            </ResponsiveContainer>
+          <div className="h-80 flex flex-col items-center">
+            <div className="flex-1 w-full max-w-sm">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={categoryData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={45}
+                    outerRadius={85}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {categoryData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => `${value.toLocaleString()} kWh`} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
             <div className="text-center mt-4">
               <div className="text-3xl font-bold text-gray-900">{Math.round(currentData.totalConsumption || 0).toLocaleString()}</div>
               <div className="text-sm text-gray-600">Total kWh</div>

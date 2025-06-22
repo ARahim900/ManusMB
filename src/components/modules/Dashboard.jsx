@@ -40,22 +40,26 @@ const Dashboard = () => {
     {
       title: "Total Energy Consumption",
       value: "1,738,034 kWh",
-      isPrimary: true
+      isPrimary: true,
+      tooltip: "Total electricity consumption across all systems for the current period. Includes residential, commercial, and infrastructure consumption."
     },
     {
       title: "Water System Efficiency", 
       value: "76.2%",
-      isPrimary: false
+      isPrimary: false,
+      tooltip: "Current water system efficiency based on input vs. output flow rates, leak detection, and distribution performance."
     },
     {
       title: "Current Balance",
       value: "$4,836.00",
-      isPrimary: true
+      isPrimary: true,
+      tooltip: "Available reserve funds balance including maintenance reserves, operational costs, and emergency funds."
     },
     {
       title: "Active Contracts",
       value: "25",
-      isPrimary: false
+      isPrimary: false,
+      tooltip: "Number of currently active maintenance and service contracts across all systems and facilities."
     }
   ];
 
@@ -80,28 +84,68 @@ const Dashboard = () => {
       message: 'High water loss detected in Zone 3A',
       time: '2 hours ago',
       icon: AlertTriangle,
-      priority: 'high'
+      priority: 'high',
+      action: () => {
+        alert('Investigating Zone 3A water loss...\n\nRecommended Actions:\n• Check valve status\n• Inspect pipeline for leaks\n• Review flow meters\n• Schedule maintenance team');
+      },
+      actionLabel: 'Investigate'
     },
     {
       type: 'info',
       message: 'Monthly electricity report generated',
       time: '4 hours ago',
       icon: BarChart3,
-      priority: 'medium'
+      priority: 'medium',
+      action: () => {
+        alert('Opening electricity consumption report...');
+        // In a real app: navigate to /electricity or open report modal
+      },
+      actionLabel: 'View Report'
     },
     {
       type: 'success',
       message: 'STP maintenance completed successfully',
       time: '1 day ago',
       icon: CheckCircle,
-      priority: 'low'
+      priority: 'low',
+      action: () => {
+        alert('STP Maintenance Summary:\n• All systems checked\n• Filters replaced\n• Performance optimized\n• Next maintenance: 30 days');
+      },
+      actionLabel: 'View Details'
     }
   ];
 
   const quickActions = [
-    { label: 'View Reports', icon: <BarChart3 className="w-4 h-4" />, action: () => {}, variant: 'primary' },
-    { label: 'System Status', icon: <Activity className="w-4 h-4" />, action: () => {}, variant: 'secondary' },
-    { label: 'Schedule Maintenance', icon: <Calendar className="w-4 h-4" />, action: () => {}, variant: 'secondary' }
+    { 
+      label: 'View Reports', 
+      icon: <BarChart3 className="w-4 h-4" />, 
+      action: () => {
+        // Navigate to a reports view or show reports modal
+        alert('Reports functionality - Navigate to reports dashboard');
+        // In a real app: navigate('/reports') or openReportsModal()
+      }, 
+      variant: 'primary' 
+    },
+    { 
+      label: 'System Status', 
+      icon: <Activity className="w-4 h-4" />, 
+      action: () => {
+        // Show system status information
+        alert('System Status: All systems operational\n- Electricity: Online\n- Water: Online\n- STP: Online\n- Reserve Fund: Stable');
+        // In a real app: openSystemStatusModal()
+      }, 
+      variant: 'secondary' 
+    },
+    { 
+      label: 'Schedule Maintenance', 
+      icon: <Calendar className="w-4 h-4" />, 
+      action: () => {
+        // Open maintenance scheduling interface
+        alert('Maintenance Scheduling - Opening scheduler...');
+        // In a real app: openMaintenanceScheduler()
+      }, 
+      variant: 'secondary' 
+    }
   ];
 
   if (loading) {
@@ -146,6 +190,7 @@ const Dashboard = () => {
             title={card.title}
             value={card.value}
             isPrimary={card.isPrimary}
+            tooltip={card.tooltip}
           />
         ))}
       </div>
@@ -220,6 +265,14 @@ const Dashboard = () => {
                     {alert.time}
                   </p>
                 </div>
+                {alert.action && (
+                  <button
+                    onClick={alert.action}
+                    className="btn btn-sm btn-secondary ml-4"
+                  >
+                    {alert.actionLabel}
+                  </button>
+                )}
               </div>
             );
           })}
