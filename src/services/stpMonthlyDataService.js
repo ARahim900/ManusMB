@@ -198,15 +198,15 @@ export const monthlyPerformanceData = [
   {
     month: 'June 2025',
     monthKey: '2025-06',
-    operatingDays: 1, // Partial month data
-    totalProcessedWater: 647, // m³
+    operatingDays: 11, // Updated with correct data
+    totalProcessedWater: 6476, // m³
     avgDailyProcessed: 589, // m³
-    totalTreatedWater: 702, // m³
+    totalTreatedWater: 7022, // m³
     avgDailyTreated: 638, // m³
     treatmentEfficiency: 108.4, // %
-    totalTSEWater: 623, // m³
+    totalTSEWater: 6231, // m³
     avgDailyTSE: 567, // m³
-    totalTankers: 11,
+    totalTankers: 117,
     avgDailyTankers: 10.6,
     tankerIncome: 526.50, // OMR
     tseWaterSavings: 8224.92, // OMR
@@ -365,4 +365,4 @@ export const getAnnualSummary = () => {
 };
 
 // Export constants
-export { TANKER_INCOME_PER_TRIP, TSE_SAVING_PER_M3, STP_DESIGN_CAPACITY }; 
+export { TANKER_INCOME_PER_TRIP, TSE_SAVING_PER_M3, STP_DESIGN_CAPACITY };
