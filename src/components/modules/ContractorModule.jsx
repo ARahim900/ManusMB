@@ -548,34 +548,55 @@ const ContractorModule = () => {
               title="Contract Value by Status"
               subtitle="Financial overview of contracts"
             >
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={contractStatusData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={5}
-                    dataKey="value"
-                    label={({ name, value }) => `${name}: ${value}`}
-                    labelLine={false}
-                  >
-                    {contractStatusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value, name) => [`${value} contracts`, name]} />
-                  <Legend 
-                    verticalAlign="bottom" 
-                    height={36}
-                    formatter={(value, entry) => `${value} (${entry.payload.value})`}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="text-center mt-4">
-                <div className="text-2xl font-bold text-gray-900">21</div>
-                <div className="text-sm text-gray-600">Total Contractors</div>
+              <div className="space-y-4">
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie
+                      data={contractStatusData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={90}
+                      paddingAngle={3}
+                      dataKey="value"
+                      label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
+                      labelLine={false}
+                      fontSize={12}
+                    >
+                      {contractStatusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value, name) => [`${value} contracts`, name]} 
+                      contentStyle={{
+                        backgroundColor: '#f8f9fa',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '6px'
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                
+                {/* Custom Legend */}
+                <div className="flex justify-center space-x-6">
+                  {contractStatusData.map((entry, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: entry.color }}
+                      ></div>
+                      <span className="text-sm font-medium text-gray-700">
+                        {entry.name}: {entry.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-900">21</div>
+                  <div className="text-sm text-gray-600">Total Contractors</div>
+                </div>
               </div>
             </ChartCard>
 
@@ -583,15 +604,65 @@ const ContractorModule = () => {
               title="Contractor Performance Ratings"
               subtitle="Based on recent reviews"
             >
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={performanceRatingData} layout="vertical" margin={{ top: 5, right: 30, left: 100, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" domain={[0, 100]} />
-                  <YAxis dataKey="contractor" type="category" width={100} fontSize={12} />
-                  <Tooltip formatter={(value) => [`${value}%`, 'Performance']} />
-                  <Bar dataKey="rating" fill="#f59e0b" />
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="space-y-4">
+                <ResponsiveContainer width="100%" height={450}>
+                  <BarChart 
+                    data={performanceRatingData.slice(0, 10)} 
+                    layout="vertical" 
+                    margin={{ top: 5, right: 40, left: 120, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                    <XAxis 
+                      type="number" 
+                      domain={[0, 100]} 
+                      tickFormatter={(value) => `${value}%`}
+                      fontSize={11}
+                    />
+                    <YAxis 
+                      dataKey="contractor" 
+                      type="category" 
+                      width={115} 
+                      fontSize={11}
+                      tick={{ textAnchor: 'end' }}
+                    />
+                    <Tooltip 
+                      formatter={(value) => [`${value}%`, 'Performance']}
+                      contentStyle={{
+                        backgroundColor: '#f8f9fa',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '6px'
+                      }}
+                    />
+                    <Bar 
+                      dataKey="rating" 
+                      fill="#f59e0b" 
+                      radius={[0, 3, 3, 0]}
+                      label={{
+                        position: 'right',
+                        formatter: (value) => `${value}%`,
+                        fontSize: 10,
+                        fill: '#374151'
+                      }}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+                
+                {/* Performance Summary */}
+                <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+                  <div className="text-center">
+                    <div className="text-lg font-semibold text-green-600">95%</div>
+                    <div className="text-xs text-gray-500">Highest</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-semibold text-orange-600">87%</div>
+                    <div className="text-xs text-gray-500">Average</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-semibold text-red-600">85%</div>
+                    <div className="text-xs text-gray-500">Lowest (shown)</div>
+                  </div>
+                </div>
+              </div>
             </ChartCard>
           </div>
         </div>
