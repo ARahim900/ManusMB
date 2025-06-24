@@ -39,33 +39,22 @@ import {
   ComposedChart
 } from 'recharts';
 
-// Import with error handling
-let stpDataService;
-try {
-  stpDataService = require('../../services/stpMonthlyDataService');
-} catch (error) {
-  console.error('Failed to load STP data service:', error);
-  stpDataService = {
-    monthlyPerformanceData: [],
-    financialAnalysisSummary: { totalFinancialBenefit: { total: 0, monthlyAverage: 0 } },
-    getAnnualSummary: () => ({}),
-    TANKER_INCOME_PER_TRIP: 4.5,
-    TSE_SAVING_PER_M3: 1.32,
-    STP_DESIGN_CAPACITY: 750
-  };
-}
+// Import STP data service with complete user database
+import { 
+  monthlyPerformanceData,
+  financialAnalysisSummary,
+  getDataByMonth,
+  getMonthlyData,
+  getPerformanceMetrics,
+  getAnnualSummary,
+  TANKER_INCOME_PER_TRIP,
+  TSE_SAVING_PER_M3,
+  STP_DESIGN_CAPACITY
+} from '../../services/stpCleanDataService';
 
-const { 
-  monthlyPerformanceData = [], 
-  financialAnalysisSummary = { totalFinancialBenefit: { total: 0, monthlyAverage: 0 } }, 
-  getDataByMonth, 
-  getMonthlyData, 
-  getPerformanceMetrics, 
-  getAnnualSummary = () => ({}),
-  TANKER_INCOME_PER_TRIP = 4.5, 
-  TSE_SAVING_PER_M3 = 1.32, 
-  STP_DESIGN_CAPACITY = 750 
-} = stpDataService;
+console.log('=== STP DATA DEBUG (HARDCODED) ===');
+console.log('monthlyPerformanceData length:', monthlyPerformanceData.length);
+console.log('monthlyPerformanceData:', monthlyPerformanceData);
 
 const STPModule = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -75,10 +64,13 @@ const STPModule = () => {
   // Get the most recent month with data as default
   const defaultMonth = useMemo(() => {
     try {
+      console.log('Monthly performance data:', monthlyPerformanceData);
       if (!monthlyPerformanceData || monthlyPerformanceData.length === 0) {
+        console.log('No monthly performance data available');
         return '2025-06';
       }
-      const sortedMonths = monthlyPerformanceData.sort((a, b) => new Date(b.monthKey) - new Date(a.monthKey));
+      const sortedMonths = [...monthlyPerformanceData].sort((a, b) => new Date(b.monthKey) - new Date(a.monthKey));
+      console.log('Sorted months:', sortedMonths);
       return sortedMonths[0]?.monthKey || '2025-06';
     } catch (error) {
       console.error('Error getting default month:', error);
@@ -94,7 +86,7 @@ const STPModule = () => {
       if (!monthlyPerformanceData || monthlyPerformanceData.length === 0) {
         return [{ value: '2025-06', label: 'June 2025' }];
       }
-      return monthlyPerformanceData
+      return [...monthlyPerformanceData]
         .sort((a, b) => new Date(b.monthKey) - new Date(a.monthKey))
         .map(month => ({
           value: month.monthKey,
@@ -104,7 +96,7 @@ const STPModule = () => {
       console.error('Error processing available months:', error);
       return [{ value: '2025-06', label: 'June 2025' }];
     }
-  }, []);
+  }, [monthlyPerformanceData]);
 
   // Get current month data with error handling
   const currentMonthData = useMemo(() => {
@@ -117,7 +109,7 @@ const STPModule = () => {
       console.error('Error getting current month data:', error);
       return null;
     }
-  }, [selectedMonth]);
+  }, [selectedMonth, monthlyPerformanceData]);
 
   // Get annual summary with error handling
   const annualSummary = useMemo(() => {
@@ -132,10 +124,13 @@ const STPModule = () => {
   // Prepare chart data for monthly trends with error handling
   const monthlyTrendData = useMemo(() => {
     try {
+      console.log('=== MONTHLY TREND DATA PROCESSING ===');
+      console.log('monthlyPerformanceData for trends:', monthlyPerformanceData);
       if (!monthlyPerformanceData || monthlyPerformanceData.length === 0) {
+        console.log('No data for monthly trends');
         return [];
       }
-      return monthlyPerformanceData.map(month => ({
+      const trends = monthlyPerformanceData.map(month => ({
         month: month.month ? month.month.split(' ')[0] : 'Unknown',
         treated: month.totalTreatedWater || 0,
         tse: month.totalTSEWater || 0,
@@ -145,11 +140,13 @@ const STPModule = () => {
         tankers: month.totalTankers || 0,
         capacityUtilization: month.avgDailyTSE ? (month.avgDailyTSE / STP_DESIGN_CAPACITY) * 100 : 0
       }));
+      console.log('Monthly trend data result:', trends);
+      return trends;
     } catch (error) {
       console.error('Error processing monthly trend data:', error);
       return [];
     }
-  }, []);
+  }, [monthlyPerformanceData]);
 
   // STP Key Performance Metrics with error handling
   const stpMetrics = useMemo(() => {
@@ -220,13 +217,20 @@ const STPModule = () => {
 
   // Financial breakdown for pie chart with error handling
   const financialBreakdown = useMemo(() => {
-    if (!currentMonthData) return [];
+    console.log('=== FINANCIAL BREAKDOWN PROCESSING ===');
+    console.log('currentMonthData for financial:', currentMonthData);
+    if (!currentMonthData) {
+      console.log('No current month data for financial breakdown');
+      return [];
+    }
     
     try {
-      return [
+      const breakdown = [
         { name: 'TSE Water Savings', value: currentMonthData.tseWaterSavings || 0, color: '#10b981' },
         { name: 'Tanker Revenue', value: currentMonthData.tankerIncome || 0, color: '#f59e0b' }
       ];
+      console.log('Financial breakdown result:', breakdown);
+      return breakdown;
     } catch (error) {
       console.error('Error processing financial breakdown:', error);
       return [];
@@ -236,11 +240,14 @@ const STPModule = () => {
   // Enhanced data for interactive charts with error handling
   const enhancedMonthlyData = useMemo(() => {
     try {
+      console.log('=== ENHANCED MONTHLY DATA PROCESSING ===');
+      console.log('monthlyPerformanceData in enhanced:', monthlyPerformanceData);
       if (!monthlyPerformanceData || monthlyPerformanceData.length === 0) {
+        console.log('No monthly performance data for enhanced processing');
         return [];
       }
       
-      return monthlyPerformanceData.map(month => {
+      const enhanced = monthlyPerformanceData.map(month => {
         // Calculate estimated tanker volume (assuming 20m³ per tanker trip)
         const estimatedTankerVolume = (month.totalTankers || 0) * 20;
         // Calculate direct sewage as the difference
@@ -263,14 +270,17 @@ const STPModule = () => {
           avgDailyTSE: month.avgDailyTSE || 0
         };
       });
+      
+      console.log('Enhanced monthly data result:', enhanced);
+      return enhanced;
     } catch (error) {
       console.error('Error processing enhanced monthly data:', error);
       return [];
     }
-  }, []);
+  }, [monthlyPerformanceData]);
 
   // Filtered data for selected months range
-  const [monthRange, setMonthRange] = useState({ start: 0, end: Math.max(0, enhancedMonthlyData.length - 1) });
+  const [monthRange, setMonthRange] = useState({ start: 0, end: 2 });
   
   const filteredChartData = useMemo(() => {
     try {
@@ -289,12 +299,13 @@ const STPModule = () => {
     setMonthRange({ start: 0, end: Math.max(0, enhancedMonthlyData.length - 1) });
   }, [enhancedMonthlyData.length]);
 
+  // Define tabs for navigation
   const tabs = [
-    { id: 'dashboard', label: 'Dashboard' },
-    { id: 'analytics', label: 'Advanced Analytics' },
-    { id: 'monthly', label: 'Monthly Analysis' },
-    { id: 'financial', label: 'Financial Overview' },
-    { id: 'annual', label: 'Annual Summary' }
+    { id: 'dashboard', label: 'Dashboard', icon: Factory },
+    { id: 'analytics', label: 'Advanced Analytics', icon: BarChart3 },
+    { id: 'monthly', label: 'Monthly Analysis', icon: Calendar },
+    { id: 'financial', label: 'Financial Overview', icon: DollarSign },
+    { id: 'annual', label: 'Annual Summary', icon: Target }
   ];
 
   // Loading state
@@ -324,6 +335,13 @@ const STPModule = () => {
 
   const renderDashboard = () => (
     <div className="space-y-6">
+      {/* Data Status Indicator */}
+      <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+        <p className="text-sm text-green-800">
+          ✅ STP Data Loaded Successfully - {monthlyPerformanceData.length} months of data available
+        </p>
+      </div>
+
       {/* Key Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {stpMetrics.map((metric, index) => (
