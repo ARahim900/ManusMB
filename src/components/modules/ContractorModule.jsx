@@ -22,7 +22,8 @@ import {
   Tooltip, 
   ResponsiveContainer,
   BarChart,
-  Bar
+  Bar,
+  Legend
 } from 'recharts';
 
 const ContractorModule = () => {
@@ -352,14 +353,14 @@ const ContractorModule = () => {
     { contractor: 'Future Cities', rating: 95 },
     { contractor: 'KONE Assarain', rating: 92 },
     { contractor: 'Muna Noor', rating: 90 },
-    { contractor: 'Bahwan Engineering', rating: 89 },
+    { contractor: 'Bahwan Eng.', rating: 89 },
     { contractor: 'OWATCO', rating: 88 },
     { contractor: 'Gulf Expert (BMS)', rating: 87 },
     { contractor: 'Gulf Expert (Chillers)', rating: 87 },
     { contractor: 'Kalhat', rating: 85 },
-    { contractor: 'Iron mountain ARAMEX', rating: 85 },
+    { contractor: 'Iron mountain', rating: 85 },
     { contractor: 'BUDGET', rating: 85 },
-    { contractor: 'National Marine Services', rating: 85 },
+    { contractor: 'Nat. Marine Svc.', rating: 85 },
     { contractor: 'NMC', rating: 85 }
   ];
 
@@ -554,15 +555,22 @@ const ContractorModule = () => {
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
-                    outerRadius={120}
+                    outerRadius={100}
                     paddingAngle={5}
                     dataKey="value"
+                    label={({ name, value }) => `${name}: ${value}`}
+                    labelLine={false}
                   >
                     {contractStatusData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
                   <Tooltip formatter={(value, name) => [`${value} contracts`, name]} />
+                  <Legend 
+                    verticalAlign="bottom" 
+                    height={36}
+                    formatter={(value, entry) => `${value} (${entry.payload.value})`}
+                  />
                 </PieChart>
               </ResponsiveContainer>
               <div className="text-center mt-4">
@@ -575,11 +583,11 @@ const ContractorModule = () => {
               title="Contractor Performance Ratings"
               subtitle="Based on recent reviews"
             >
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={performanceRatingData} layout="horizontal">
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={performanceRatingData} layout="vertical" margin={{ top: 5, right: 30, left: 100, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" domain={[0, 100]} />
-                  <YAxis dataKey="contractor" type="category" width={80} />
+                  <YAxis dataKey="contractor" type="category" width={100} fontSize={12} />
                   <Tooltip formatter={(value) => [`${value}%`, 'Performance']} />
                   <Bar dataKey="rating" fill="#f59e0b" />
                 </BarChart>

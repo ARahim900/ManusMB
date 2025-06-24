@@ -238,6 +238,20 @@ body {
   }
 }
 
+/* Charts Grid Layout */
+.charts-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: 1fr;
+  margin-bottom: var(--content-spacing);
+}
+
+@media (min-width: 1024px) {
+  .charts-grid {
+    grid-template-columns: 1.5fr 1fr;
+  }
+}
+
 /* Sidebar Styles */
 .sidebar {
   background: var(--sidebar-background);
