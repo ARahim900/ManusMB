@@ -28,11 +28,11 @@ import {
 const ContractorModule = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  // Contractor metrics based on the Excel data structure
+  // Contractor metrics based on the Excel data structure - Updated June 24, 2025
   const contractorMetrics = [
     {
       title: 'Active Contracts',
-      value: '9',
+      value: '14',
       unit: 'contracts',
       subtitle: 'Ongoing',
       icon: FileText,
@@ -40,7 +40,7 @@ const ContractorModule = () => {
     },
     {
       title: 'Expired Contracts',
-      value: '8',
+      value: '7',
       unit: 'contracts',
       subtitle: 'Completed/Ended',
       icon: AlertTriangle,
@@ -48,44 +48,44 @@ const ContractorModule = () => {
     },
     {
       title: 'Total Contract Value',
-      value: '509,409',
+      value: '535,154',
       unit: 'OMR',
       subtitle: 'Annual (Active)',
       icon: DollarSign,
       iconColor: 'text-green-500'
     },
     {
-      title: 'Contract Types',
-      value: '14 Contract + 3 PO',
-      unit: 'mixed',
-      subtitle: 'Total Portfolio',
-      icon: FileText,
+      title: 'Total Contractors',
+      value: '21',
+      unit: 'contractors',
+      subtitle: '6 Updated | 3 New | 2 Status Changed',
+      icon: Users,
       iconColor: 'text-blue-500'
     }
   ];
 
-  // Sample contractor data based on Excel structure
+  // Updated contractor data - June 24, 2025 - 21 Total Contractors | 6 Updated | 3 New | 2 Status Changed
   const contractors = [
     {
       name: 'KONE Assarain LLC',
-      service: 'Lift Maintenance Services',
+      service: 'Elevators AMC - 21 Nos',
       status: 'Active',
       contractType: 'Contract',
-      startDate: '2025-01-01',
-      endDate: 'TBD',
-      monthlyValue: '525 OMR',
-      annualValue: '11,550 OMR (Excl VAT)',
+      startDate: '2024-01-01',
+      endDate: '2026-12-31',
+      monthlyValue: '1,837.5 OMR',
+      annualValue: '22,050.000 OMR (Inc VAT)',
       performance: 92,
       rating: 4.5,
-      note: ''
+      note: 'UPDATED - Updated from Nouf\'s email - 24 months duration'
     },
     {
       name: 'Oman Water Treatment Company (OWATCO)',
       service: 'Comprehensive STP Operation and Maintenance',
       status: 'Active',
       contractType: 'Contract',
-      startDate: 'TBD',
-      endDate: 'TBD',
+      startDate: '-',
+      endDate: '-',
       monthlyValue: '3,103.8 OMR',
       annualValue: '37,245.4 OMR (Inc VAT)',
       performance: 88,
@@ -110,8 +110,8 @@ const ContractorModule = () => {
       service: 'SUPPLY AND INSTALLATION OF SMART WATER METERS, BILLING FOR WATER CONSUMPTION',
       status: 'Active',
       contractType: 'Contract',
-      startDate: 'TBD',
-      endDate: 'TBD',
+      startDate: '-',
+      endDate: '-',
       monthlyValue: '2.7 Per Meter Collection',
       annualValue: '184.3 OMR',
       performance: 95,
@@ -123,9 +123,9 @@ const ContractorModule = () => {
       service: 'Pest Control Services',
       status: 'Active',
       contractType: 'Contract',
-      startDate: '2024-07-01',
-      endDate: 'TBD',
-      monthlyValue: '1,400 OMR/Month Inc VAT',
+      startDate: '2024-01-07',
+      endDate: '-',
+      monthlyValue: '1,400 /Month Inc VAT',
       annualValue: '16,000 OMR (Inc VAT)',
       performance: 90,
       rating: 4.3,
@@ -136,75 +136,88 @@ const ContractorModule = () => {
       service: 'Comprehensive STP Operation and Maintenance',
       status: 'Expired',
       contractType: 'Contract',
-      startDate: 'TBD',
-      endDate: 'TBD',
-      monthlyValue: '4,439 OMR/Month',
-      annualValue: 'N/A',
+      startDate: '-',
+      endDate: '-',
+      monthlyValue: '4,439 /Month',
+      annualValue: '-',
       performance: 60,
       rating: 2.5,
       note: 'Transitioned to OWATCO before contract end'
     },
     {
       name: 'Gulf Expert',
-      service: 'Chillers, BMS & Pressurisation Units',
+      service: 'BMS AMC FM & Staff Accommodation',
       status: 'Active',
       contractType: 'Contract',
-      startDate: '2024-06-03',
-      endDate: '2025-06-02',
-      monthlyValue: '770 OMR',
-      annualValue: '9,240 OMR (Inc VAT)',
+      startDate: '2025-06-03',
+      endDate: '2026-06-02',
+      monthlyValue: '183.75 OMR',
+      annualValue: '2,205.000 OMR (Inc VAT)',
       performance: 87,
       rating: 4.1,
-      note: ''
+      note: 'UPDATED - Updated from Nouf\'s email'
+    },
+    {
+      name: 'Gulf Expert',
+      service: 'CHILLERS AMC FM & Staff Accommodation',
+      status: 'Active',
+      contractType: 'Contract',
+      startDate: '2025-06-03',
+      endDate: '2026-06-02',
+      monthlyValue: '602.875 OMR',
+      annualValue: '7,234.500 OMR (Inc VAT)',
+      performance: 87,
+      rating: 4.1,
+      note: 'UPDATED - Updated from Nouf\'s email'
     },
     {
       name: 'Advanced Technology and Projects Company',
       service: 'BMS Non-Comprehensive Annual Maintenance',
       status: 'Expired',
       contractType: 'PO',
-      startDate: 'TBD',
-      endDate: 'TBD',
-      monthlyValue: 'N/A',
-      annualValue: '3,800 OMR/Year',
+      startDate: '-',
+      endDate: '-',
+      monthlyValue: '3,800 /Year',
+      annualValue: '-',
       performance: 75,
       rating: 3.5,
       note: ''
     },
     {
-      name: 'Al Naba Services LLC',
-      service: 'Garbage Removal Services',
-      status: 'Expired',
+      name: 'Al Nabaa services',
+      service: 'removal of general waste for 1 year',
+      status: 'Active',
       contractType: 'Contract',
-      startDate: '2023-04-02',
-      endDate: '2024-04-01',
-      monthlyValue: '32 OMR/Skip Trip',
-      annualValue: 'N/A',
+      startDate: '2024-08-15',
+      endDate: '2025-08-14',
+      monthlyValue: '99.75 OMR',
+      annualValue: '1,197.00 OMR (Inc VAT)',
       performance: 70,
       rating: 3.2,
-      note: ''
+      note: 'STATUS CHANGED - PO-SBJ-18-2329 - No need to extend – under JMB (Updated from Nouf\'s email)'
     },
     {
       name: 'Bahwan Engineering Company LLC',
-      service: 'Maintenance of Fire Alarm & Fire Fighting Equipment',
+      service: 'Fire alarm AMC',
       status: 'Active',
       contractType: 'Contract',
-      startDate: 'TBD',
-      endDate: 'TBD',
-      monthlyValue: '743.8 OMR',
-      annualValue: '8,925 OMR (Inc VAT)',
+      startDate: '2024-11-01',
+      endDate: '2025-10-31',
+      monthlyValue: '743.75 OMR',
+      annualValue: '8,925.00 OMR (Inc VAT)',
       performance: 89,
       rating: 4.4,
-      note: ''
+      note: 'UPDATED - Updated from Nouf\'s email'
     },
     {
       name: 'Oman Pumps Manufacturing Co.',
       service: 'Supply, Installation, and Commissioning of Pumps',
       status: 'Expired',
       contractType: 'Contract',
-      startDate: 'TBD',
-      endDate: 'TBD',
-      monthlyValue: 'N/A',
-      annualValue: '37,800 OMR on Delivery',
+      startDate: '-',
+      endDate: '-',
+      monthlyValue: '-',
+      annualValue: '-',
       performance: 85,
       rating: 4.0,
       note: ''
@@ -214,10 +227,10 @@ const ContractorModule = () => {
       service: 'Provision of Services',
       status: 'Expired',
       contractType: 'Contract',
-      startDate: 'TBD',
-      endDate: 'TBD',
-      monthlyValue: 'N/A',
-      annualValue: '51,633 OMR on Delivery',
+      startDate: '-',
+      endDate: '-',
+      monthlyValue: '-',
+      annualValue: '-',
       performance: 78,
       rating: 3.8,
       note: ''
@@ -227,36 +240,36 @@ const ContractorModule = () => {
       service: 'Facility Management (FM)',
       status: 'Expired',
       contractType: 'Contract',
-      startDate: '2022-03-01',
-      endDate: 'TBD',
-      monthlyValue: '44,382 OMR/Month',
-      annualValue: 'N/A',
+      startDate: '-',
+      endDate: '-',
+      monthlyValue: '-',
+      annualValue: '-',
       performance: 65,
       rating: 3.0,
-      note: 'Transitioned to Kalhat before contract end'
+      note: ''
     },
     {
       name: 'Muscat Electronics LLC',
-      service: 'Daikin AC Chillers (Sale Center) Maintenance Services',
-      status: 'Expired',
+      service: 'AMC for Daikin AC at sale center',
+      status: 'Active',
       contractType: 'Contract',
-      startDate: 'TBD',
-      endDate: 'TBD',
-      monthlyValue: '199.5 OMR/Service Quarter',
-      annualValue: 'N/A',
+      startDate: '2025-06-03',
+      endDate: '2026-06-02',
+      monthlyValue: '72.65 OMR',
+      annualValue: '871.820 OMR (Inc VAT)',
       performance: 80,
       rating: 3.8,
-      note: 'Nearing expiration, review for renewal needed'
+      note: 'STATUS CHANGED - PO-SBJ-18-2488 (Updated from Nouf\'s email - Status changed to Active)'
     },
     {
       name: 'Uni Gaz',
       service: 'Gas Refilling for Flame Operation at Muscat Bay Main Entrance',
       status: 'Expired',
-      contractType: 'PO',
-      startDate: 'TBD',
-      endDate: 'TBD',
-      monthlyValue: 'N/A',
-      annualValue: 'N/A',
+      contractType: 'Contract',
+      startDate: '-',
+      endDate: '-',
+      monthlyValue: '-',
+      annualValue: '-',
       performance: 70,
       rating: 3.5,
       note: ''
@@ -266,10 +279,10 @@ const ContractorModule = () => {
       service: 'York AC Chillers (Zone 01) Maintenance Services',
       status: 'Expired',
       contractType: 'Contract',
-      startDate: 'TBD',
-      endDate: 'TBD',
-      monthlyValue: 'N/A',
-      annualValue: 'N/A',
+      startDate: '-',
+      endDate: '-',
+      monthlyValue: '-',
+      annualValue: '-',
       performance: 75,
       rating: 3.6,
       note: ''
@@ -278,32 +291,75 @@ const ContractorModule = () => {
       name: 'NMC',
       service: 'Lagoon Main Two Drain Pipes Cleaning',
       status: 'Active',
-      contractType: 'PO',
-      startDate: 'TBD',
-      endDate: 'TBD',
-      monthlyValue: 'N/A',
-      annualValue: 'N/A',
+      contractType: 'Contract',
+      startDate: '-',
+      endDate: '-',
+      monthlyValue: '-',
+      annualValue: '-',
       performance: 85,
       rating: 4.0,
       note: ''
+    },
+    {
+      name: 'Iron mountain ARAMEX',
+      service: 'offsite record storage',
+      status: 'Active',
+      contractType: 'Contract',
+      startDate: '2025-01-01',
+      endDate: '2025-12-31',
+      monthlyValue: 'Schedule of rates',
+      annualValue: 'Schedule of rates',
+      performance: 85,
+      rating: 4.0,
+      note: 'NEW - New contractor from Nouf\'s email'
+    },
+    {
+      name: 'BUDGET',
+      service: 'lease of vehicles for Muscat Bay - Outlander (3)',
+      status: 'Active',
+      contractType: 'Contract',
+      startDate: '2025-05-07',
+      endDate: '2030-05-06',
+      monthlyValue: '834.75 OMR',
+      annualValue: '50,085.00 OMR (Inc VAT)',
+      performance: 85,
+      rating: 4.0,
+      note: 'NEW - New contractor from Nouf\'s email - 60 months lease'
+    },
+    {
+      name: 'National marine services LLC',
+      service: 'service agreement - diving services (1 year)',
+      status: 'Active',
+      contractType: 'Contract',
+      startDate: '2024-11-06',
+      endDate: '2026-11-05',
+      monthlyValue: '198.24 OMR',
+      annualValue: '4,757.76 OMR (Inc VAT)',
+      performance: 85,
+      rating: 4.0,
+      note: 'NEW - PO-SBJ-18-2384 - New contractor from Nouf\'s email - 24 months duration'
     }
   ];
 
-  // Contract status data for pie chart
+  // Contract status data for pie chart - Updated June 24, 2025
   const contractStatusData = [
-    { name: 'Active', value: 9, color: '#10b981' },
-    { name: 'Expired', value: 8, color: '#ef4444' }
+    { name: 'Active', value: 14, color: '#10b981' },
+    { name: 'Expired', value: 7, color: '#ef4444' }
   ];
 
-  // Performance rating data
+  // Performance rating data - Updated June 24, 2025
   const performanceRatingData = [
     { contractor: 'Future Cities', rating: 95 },
     { contractor: 'KONE Assarain', rating: 92 },
     { contractor: 'Muna Noor', rating: 90 },
     { contractor: 'Bahwan Engineering', rating: 89 },
     { contractor: 'OWATCO', rating: 88 },
-    { contractor: 'Gulf Expert', rating: 87 },
+    { contractor: 'Gulf Expert (BMS)', rating: 87 },
+    { contractor: 'Gulf Expert (Chillers)', rating: 87 },
     { contractor: 'Kalhat', rating: 85 },
+    { contractor: 'Iron mountain ARAMEX', rating: 85 },
+    { contractor: 'BUDGET', rating: 85 },
+    { contractor: 'National Marine Services', rating: 85 },
     { contractor: 'NMC', rating: 85 }
   ];
 
@@ -314,14 +370,16 @@ const ContractorModule = () => {
     { contractor: 'KONE Assarain LLC', service: 'Lift Maintenance Services', expiryDate: 'TBD', daysLeft: 365 }
   ];
 
-  // Recent contract activities
+  // Recent contract activities - Updated June 24, 2025
   const recentActivities = [
-    { date: '2025-01-01', activity: 'New contract started - KONE Assarain LLC', type: 'new' },
-    { date: '2024-07-05', activity: 'Contract transition - Kalhat replacing COMO', type: 'renewal' },
-    { date: '2024-07-01', activity: 'Contract renewed - Muna Noor International LLC', type: 'renewal' },
-    { date: '2024-06-03', activity: 'New contract signed - Gulf Expert', type: 'new' },
-    { date: '2024-06-01', activity: 'Contract terminated early - Celar Water', type: 'compliance' },
-    { date: '2024-05-15', activity: 'Contract transition - OWATCO replacing Celar', type: 'new' }
+    { date: '2025-06-24', activity: 'CONTRACT UPDATE - 6 contractors updated from Nouf\'s email', type: 'review' },
+    { date: '2025-06-24', activity: 'NEW CONTRACTORS - Added Iron mountain ARAMEX, BUDGET, National marine services', type: 'new' },
+    { date: '2025-06-24', activity: 'STATUS CHANGE - Al Nabaa services & Muscat Electronics changed to Active', type: 'renewal' },
+    { date: '2025-06-03', activity: 'Updated contracts - Gulf Expert BMS & Chillers AMC', type: 'renewal' },
+    { date: '2025-05-07', activity: 'New contract signed - BUDGET vehicle lease (60 months)', type: 'new' },
+    { date: '2025-01-01', activity: 'New contract started - Iron mountain ARAMEX offsite storage', type: 'new' },
+    { date: '2024-11-06', activity: 'New contract signed - National marine services diving services', type: 'new' },
+    { date: '2024-11-01', activity: 'Updated contract - Bahwan Engineering Fire alarm AMC', type: 'renewal' }
   ];
 
   const tabs = [
@@ -508,8 +566,8 @@ const ContractorModule = () => {
                 </PieChart>
               </ResponsiveContainer>
               <div className="text-center mt-4">
-                <div className="text-2xl font-bold text-gray-900">17</div>
-                <div className="text-sm text-gray-600">Total Contracts</div>
+                <div className="text-2xl font-bold text-gray-900">21</div>
+                <div className="text-sm text-gray-600">Total Contractors</div>
               </div>
             </ChartCard>
 

@@ -46,7 +46,6 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
       icon: DollarSign,
       label: 'Reserve Fund',
       path: '/reserve-fund',
-      badge: 'NEW',
       shortLabel: 'Reserve'
     },
     {
