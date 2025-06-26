@@ -13,6 +13,7 @@ const WaterModule = React.lazy(() => import('./components/modules/WaterModule'))
 const STPModule = React.lazy(() => import('./components/modules/STPModule'));
 const ReserveFundModule = React.lazy(() => import('./components/modules/ReserveFundModule'));
 const ContractorModule = React.lazy(() => import('./components/modules/ContractorModule'));
+const HVACModule = React.lazy(() => import('./components/modules/HVACModule'));
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
                   <Route path="/stp" element={<STPModule />} />
                   <Route path="/reserve-fund" element={<ReserveFundModule />} />
                   <Route path="/contractor" element={<ContractorModule />} />
+                  <Route path="/hvac" element={<HVACModule />} />
                   <Route path="*" element={<Dashboard />} />
                 </Routes>
               </Suspense>

@@ -7,6 +7,7 @@ import {
   DollarSign, 
   Users, 
   BarChart3,
+  Settings,
   X,
   Menu,
   ChevronLeft,
@@ -53,6 +54,12 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
       label: 'Contractor Tracker',
       path: '/contractor',
       shortLabel: 'Contractor'
+    },
+    {
+      icon: Settings,
+      label: 'HVAC Tracker',
+      path: '/hvac',
+      shortLabel: 'HVAC'
     }
   ];
 
