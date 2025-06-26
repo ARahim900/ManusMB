@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
+import Logo from '../ui/Logo';
 
 const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
   const location = useLocation();
@@ -69,13 +70,15 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
       <div 
         className={`sidebar-container hidden md:flex md:flex-col transition-all duration-300 ease-in-out ${
           isCollapsed ? 'md:w-20' : 'md:w-72'
-        } bg-sidebar-bg dark:bg-gray-800 text-sidebar-text dark:text-gray-200`}
+        }`}
         style={{
           position: 'fixed',
           left: 0,
           top: 0,
           bottom: 0,
           zIndex: 30,
+          backgroundColor: '#5f5168', // Primary brand color
+          color: '#F2F0EA', // Light text
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
           height: '100vh',
           minHeight: '100vh',
@@ -85,51 +88,18 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
       >
         {/* Logo */}
         <div 
-          className="flex items-center justify-center h-16 px-6 border-b relative flex-shrink-0"
+          className="flex items-center h-16 px-6 border-b relative flex-shrink-0"
           style={{ 
             borderBottomColor: 'rgba(242, 240, 234, 0.2)',
             padding: '24px'
           }}
         >
-          {!isCollapsed ? (
-            <h1 
-              className="text-xl font-bold transition-opacity duration-300"
-              style={{ 
-                color: '#F2F0EA',
-                fontFamily: "'Inter', sans-serif",
-                fontSize: '1.25rem',
-                fontWeight: '600'
-              }}
-            >
-              Muscat Bay
-            </h1>
-          ) : (
-            <div 
-              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
-              style={{ 
-                backgroundColor: '#A8D5E3',
-                borderRadius: '12px'
-              }}
-            >
-              <span 
-                className="text-lg font-bold"
-                style={{ 
-                  color: '#5f5168',
-                  fontFamily: "'Inter', sans-serif",
-                  fontWeight: '700'
-                }}
-              >
-                MB
-              </span>
-            </div>
-          )}
+          <Logo collapsed={isCollapsed} size="default" />
           
           {/* Collapse Toggle Button */}
           <button
             onClick={onToggleCollapse}
-            className={`absolute right-2 top-1/2 transform -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white hover:bg-opacity-10 ${
-              isCollapsed ? 'right-2' : 'right-2'
-            }`}
+            className={`absolute right-2 top-1/2 transform -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white hover:bg-opacity-10`}
             style={{ color: '#F2F0EA' }}
             title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
@@ -166,9 +136,22 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
                     textDecoration: 'none',
                     fontFamily: "'Inter', sans-serif",
                     fontSize: '0.875rem',
-                    fontWeight: '500'
+                    fontWeight: '500',
+                    ':hover': {
+                      backgroundColor: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.1)'
+                    }
                   }}
                   title={isCollapsed ? item.label : ''}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.target.style.backgroundColor = 'transparent';
+                    }
+                  }}
                 >
                   <Icon className={`w-5 h-5 ${isCollapsed ? '' : 'mr-3'} transition-all duration-300`} />
                   
@@ -318,11 +301,13 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
       <div 
         className={`sidebar-mobile fixed top-0 left-0 w-72 z-50 md:hidden transform transition-transform duration-300 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
-        } bg-sidebar-bg dark:bg-gray-800 text-sidebar-text dark:text-gray-200`}
+        }`}
         style={{
           height: '100vh',
           maxHeight: '100vh',
-          overflowY: 'auto'
+          overflowY: 'auto',
+          backgroundColor: '#5f5168', // Primary brand color
+          color: '#F2F0EA' // Light text
         }}
       >
         {/* Mobile Header */}
@@ -333,17 +318,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
             padding: '24px'
           }}
         >
-          <h1 
-            className="text-xl font-bold"
-            style={{ 
-              color: '#F2F0EA',
-              fontFamily: "'Inter', sans-serif",
-              fontSize: '1.25rem',
-              fontWeight: '600'
-            }}
-          >
-            Muscat Bay
-          </h1>
+          <Logo collapsed={false} size="default" />
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white hover:bg-opacity-10 transition-colors"
@@ -377,6 +352,16 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
                   fontFamily: "'Inter', sans-serif",
                   fontSize: '0.875rem',
                   fontWeight: '500'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.target.style.backgroundColor = 'transparent';
+                  }
                 }}
               >
                 <Icon className="w-5 h-5 mr-3" />
