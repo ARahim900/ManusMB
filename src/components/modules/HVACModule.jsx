@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SubNavigation from '../ui/SubNavigation';
-import { Settings, BarChart3, FileText, AlertTriangle, Database, LayoutDashboard } from 'lucide-react';
+import { Settings, BarChart3, FileText, AlertTriangle, Database, LayoutDashboard, ArrowLeft, Building } from 'lucide-react';
 
 // --- Helper Functions ---
 const generateId = () => {
@@ -185,6 +185,165 @@ const ConfirmModal = ({ onConfirm, onCancel, message }) => {
     );
 };
 
+// Add Building Details Modal Component
+const BuildingDetailsModal = ({ building, records, onClose }) => {
+    if (!building) return null;
+
+    const buildingRecords = records.filter(record => record.building === building);
+    const criticalIssues = buildingRecords.filter(record => 
+        record.ppm4.toLowerCase().includes('need to replace') || 
+        record.ppm4.toLowerCase().includes('defective') ||
+        record.ppm4.toLowerCase().includes('no gas')
+    );
+
+    const systemBreakdown = buildingRecords.reduce((acc, record) => {
+        if (!acc[record.mainSystem]) {
+            acc[record.mainSystem] = { total: 0, critical: 0 };
+        }
+        acc[record.mainSystem].total += 1;
+        if (criticalIssues.find(critical => critical.id === record.id)) {
+            acc[record.mainSystem].critical += 1;
+        }
+        return acc;
+    }, {});
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto" style={{ backgroundColor: '#ffffff' }}>
+                {/* Header */}
+                <div className="p-6 border-b" style={{ borderBottomColor: '#F2F0EA' }}>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                            <div className="p-3 rounded-full mr-4" style={{ backgroundColor: '#A8D5E3' }}>
+                                <Building className="w-6 h-6" style={{ color: '#5f5168' }} />
+                            </div>
+                            <div>
+                                <h2 className="text-3xl font-bold" style={{ color: '#5f5168' }}>Building {building}</h2>
+                                <p className="text-sm" style={{ color: '#0A1828' }}>Detailed HVAC System Overview</p>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={onClose}
+                            className="p-2 rounded-lg hover:opacity-80 transition-opacity"
+                            style={{ backgroundColor: '#F2F0EA', color: '#5f5168' }}
+                        >
+                            <ArrowLeft className="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Summary Stats */}
+                <div className="p-6 border-b" style={{ borderBottomColor: '#F2F0EA' }}>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="text-center p-4 rounded-lg" style={{ backgroundColor: '#F2F0EA' }}>
+                            <div className="text-2xl font-bold" style={{ color: '#5f5168' }}>{buildingRecords.length}</div>
+                            <div className="text-sm" style={{ color: '#0A1828' }}>Total Equipment</div>
+                        </div>
+                        <div className="text-center p-4 rounded-lg" style={{ backgroundColor: '#C3FBF4' }}>
+                            <div className="text-2xl font-bold" style={{ color: '#5f5168' }}>{Object.keys(systemBreakdown).length}</div>
+                            <div className="text-sm" style={{ color: '#0A1828' }}>System Types</div>
+                        </div>
+                        <div className="text-center p-4 rounded-lg" style={{ backgroundColor: criticalIssues.length > 0 ? '#ffebee' : '#e8f5e8' }}>
+                            <div className="text-2xl font-bold" style={{ color: criticalIssues.length > 0 ? '#d32f2f' : '#388e3c' }}>{criticalIssues.length}</div>
+                            <div className="text-sm" style={{ color: '#0A1828' }}>Critical Issues</div>
+                        </div>
+                        <div className="text-center p-4 rounded-lg" style={{ backgroundColor: '#BFA181' }}>
+                            <div className="text-2xl font-bold" style={{ color: '#ffffff' }}>{((buildingRecords.length - criticalIssues.length) / buildingRecords.length * 100).toFixed(0)}%</div>
+                            <div className="text-sm" style={{ color: '#ffffff' }}>Health Score</div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* System Breakdown */}
+                <div className="p-6 border-b" style={{ borderBottomColor: '#F2F0EA' }}>
+                    <h3 className="text-xl font-bold mb-4" style={{ color: '#5f5168' }}>System Breakdown</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {Object.entries(systemBreakdown).map(([system, data]) => (
+                            <div key={system} className="p-4 rounded-lg border" style={{ backgroundColor: '#F2F0EA', borderColor: '#BFA181' }}>
+                                <h4 className="font-bold text-lg" style={{ color: '#5f5168' }}>{system}</h4>
+                                <p className="text-sm" style={{ color: '#0A1828' }}>
+                                    {data.total} Equipment • {data.critical} Critical Issues
+                                </p>
+                                <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                                    <div 
+                                        className="h-2 rounded-full" 
+                                        style={{ 
+                                            backgroundColor: data.critical > 0 ? '#d32f2f' : '#388e3c',
+                                            width: `${(data.total - data.critical) / data.total * 100}%`
+                                        }}
+                                    ></div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Critical Issues Section */}
+                {criticalIssues.length > 0 && (
+                    <div className="p-6 border-b" style={{ borderBottomColor: '#F2F0EA' }}>
+                        <h3 className="text-xl font-bold mb-4" style={{ color: '#5f5168' }}>⚠️ Critical Issues Requiring Attention</h3>
+                        <div className="space-y-3">
+                            {criticalIssues.map(issue => (
+                                <div key={issue.id} className="p-4 rounded-lg border-l-4" 
+                                    style={{ backgroundColor: '#ffebee', borderLeftColor: '#d32f2f' }}>
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <h4 className="font-bold" style={{ color: '#5f5168' }}>{issue.equipment}</h4>
+                                            <p className="text-sm" style={{ color: '#0A1828' }}>System: {issue.mainSystem}</p>
+                                            <p className="text-sm mt-1" style={{ color: '#0A1828' }}>
+                                                <strong>Latest Issues:</strong> {issue.ppm4}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Detailed Equipment List */}
+                <div className="p-6">
+                    <h3 className="text-xl font-bold mb-4" style={{ color: '#5f5168' }}>All Equipment</h3>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead className="text-xs uppercase" style={{ backgroundColor: '#F2F0EA', color: '#0A1828' }}>
+                                <tr>
+                                    <th className="px-4 py-3 text-left">Equipment</th>
+                                    <th className="px-4 py-3 text-left">System</th>
+                                    <th className="px-4 py-3 text-left">Status</th>
+                                    <th className="px-4 py-3 text-left">Latest PPM</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {buildingRecords.map((record, index) => {
+                                    const isCritical = criticalIssues.find(critical => critical.id === record.id);
+                                    return (
+                                        <tr key={record.id} className="border-b" 
+                                            style={{ backgroundColor: index % 2 === 0 ? '#ffffff' : '#fffeff', borderBottomColor: '#F2F0EA' }}>
+                                            <td className="px-4 py-3 font-medium" style={{ color: '#5f5168' }}>{record.equipment}</td>
+                                            <td className="px-4 py-3" style={{ color: '#0A1828' }}>{record.mainSystem}</td>
+                                            <td className="px-4 py-3">
+                                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                                    isCritical ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                                                }`}>
+                                                    {isCritical ? 'Critical' : 'Normal'}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3 max-w-xs truncate" style={{ color: '#0A1828' }}>
+                                                {record.ppm4 || record.ppm3 || record.ppm2 || record.ppm1 || 'No issues reported'}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // --- Main App Component ---
 export default function HVACModule() {
     // App state
@@ -196,6 +355,7 @@ export default function HVACModule() {
     const [editingRecord, setEditingRecord] = useState(null);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [recordToDelete, setRecordToDelete] = useState(null);
+    const [selectedBuilding, setSelectedBuilding] = useState(null);
     
     // Filtering state
     const [searchTerm, setSearchTerm] = useState('');
@@ -327,6 +487,15 @@ const verifyInitialData = () => {
         setEditingRecord(null);
         setIsModalOpen(true);
     };
+
+    // Add building click handler
+    const handleBuildingClick = (building) => {
+        setSelectedBuilding(building);
+    };
+
+    const handleCloseBuildingDetails = () => {
+        setSelectedBuilding(null);
+    };
     
     // --- Derived State and Rendering ---
     const buildings = [...new Set(records.map(r => r.building))].sort();
@@ -437,6 +606,7 @@ const verifyInitialData = () => {
                     {/* Building-wise Summary */}
                     <div className="p-6 rounded-xl shadow-md mb-6" style={{ backgroundColor: '#ffffff' }}>
                       <h3 className="text-xl font-bold mb-4" style={{ color: '#5f5168' }}>Building Summary</h3>
+                      <p className="text-sm mb-4" style={{ color: '#0A1828' }}>Click on any building to view detailed information</p>
                       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
                         {buildings.map(building => {
                           const buildingRecords = filteredRecords.filter(record => record.building === building);
@@ -447,11 +617,15 @@ const verifyInitialData = () => {
                           ).length;
                           
                           return (
-                            <div key={building} className="text-center p-4 rounded-lg" 
+                            <div 
+                              key={building} 
+                              className="text-center p-4 rounded-lg cursor-pointer hover:shadow-lg transform hover:scale-105 transition-all duration-200" 
                               style={{ 
                                 backgroundColor: criticalIssues > 0 ? '#A8D5E3' : '#F2F0EA',
                                 border: criticalIssues > 0 ? '2px solid #5f5168' : '1px solid #BFA181'
-                              }}>
+                              }}
+                              onClick={() => handleBuildingClick(building)}
+                            >
                               <h4 className="font-bold text-lg" style={{ color: '#5f5168' }}>{building}</h4>
                               <p className="text-sm" style={{ color: '#0A1828' }}>
                                 {buildingRecords.length} Equipment
@@ -461,6 +635,7 @@ const verifyInitialData = () => {
                                   {criticalIssues} Critical
                                 </p>
                               )}
+                              <p className="text-xs mt-2 opacity-70" style={{ color: '#5f5168' }}>Click for details</p>
                             </div>
                           );
                         })}
@@ -633,6 +808,14 @@ const verifyInitialData = () => {
                     onConfirm={handleConfirmDelete}
                     onCancel={handleCancelDelete}
                     message="Are you sure you want to delete this record? This action cannot be undone."
+                />
+            )}
+
+            {selectedBuilding && (
+                <BuildingDetailsModal
+                    building={selectedBuilding}
+                    records={records}
+                    onClose={handleCloseBuildingDetails}
                 />
             )}
         </div>
