@@ -3,6 +3,7 @@ import MetricCard from '../ui/MetricCard';
 import ChartCard from '../ui/ChartCard';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import ErrorBoundary from '../ui/ErrorBoundary';
+import SubNavigation from '../ui/SubNavigation';
 import { Button } from '@/components/ui/button';
 import { 
   Factory, 
@@ -299,13 +300,13 @@ const STPModule = () => {
     setMonthRange({ start: 0, end: Math.max(0, enhancedMonthlyData.length - 1) });
   }, [enhancedMonthlyData.length]);
 
-  // Define tabs for navigation
-  const tabs = [
-    { id: 'dashboard', label: 'Dashboard', icon: Factory },
-    { id: 'analytics', label: 'Advanced Analytics', icon: BarChart3 },
-    { id: 'monthly', label: 'Monthly Analysis', icon: Calendar },
-    { id: 'financial', label: 'Financial Overview', icon: DollarSign },
-    { id: 'annual', label: 'Annual Summary', icon: Target }
+  // Define tabs for navigation with updated structure for SubNavigation
+  const subSections = [
+    { id: 'dashboard', name: 'Dashboard', icon: Factory },
+    { id: 'analytics', name: 'Advanced Analytics', icon: BarChart3 },
+    { id: 'monthly', name: 'Monthly Analysis', icon: Calendar },
+    { id: 'financial', name: 'Financial Overview', icon: DollarSign },
+    { id: 'annual', name: 'Annual Summary', icon: Target }
   ];
 
   // Loading state
@@ -976,80 +977,27 @@ const STPModule = () => {
   );
 
   return (
-    <ErrorBoundary>
-      <div className="stp-module space-y-6">
-        {/* Page Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">STP Plant Operations</h1>
-            <p className="text-gray-600 mt-2">
-              Comprehensive monitoring of Sewage Treatment Plant performance based on actual operational data
-            </p>
-            <div className="flex items-center space-x-6 mt-3">
-              <div className="text-sm">
-                <span className="font-medium text-gray-700">Design Capacity:</span>
-                <span className="text-blue-600 font-semibold ml-1">{STP_DESIGN_CAPACITY} m³/day TSE</span>
-              </div>
-              <div className="text-sm">
-                <span className="font-medium text-gray-700">Revenue Model:</span>
-                <span className="text-green-600 font-semibold ml-1">{TANKER_INCOME_PER_TRIP} OMR/trip + {TSE_SAVING_PER_M3} OMR/m³ TSE</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-sm font-medium text-green-600">Plant Operational</span>
-            </div>
-            <select 
-              value={selectedMonth} 
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {availableMonths.map(option => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Navigation Tabs */}
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  try {
-                    setActiveTab(tab.id);
-                  } catch (error) {
-                    console.error('Error switching tabs:', error);
-                  }
-                }}
-                className={`${
-                  activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        {/* Tab Content */}
-        <div className="tab-content">
-          <ErrorBoundary>
-            {activeTab === 'dashboard' && renderDashboard()}
-            {activeTab === 'analytics' && renderAdvancedAnalytics()}
-            {activeTab === 'monthly' && renderMonthlyAnalysis()}
-            {activeTab === 'financial' && renderFinancialOverview()}
-            {activeTab === 'annual' && renderAnnualSummary()}
-          </ErrorBoundary>
-        </div>
+    <div className="space-y-6 p-6 bg-background-primary dark:bg-gray-900 min-h-screen transition-colors duration-300">
+      {/* Header */}
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-primary dark:text-white mb-2 transition-colors duration-300">STP Plant Management System</h1>
+        <p className="text-secondary dark:text-gray-300 transition-colors duration-300">Sewage Treatment Plant Operations & Performance Monitoring</p>
       </div>
-    </ErrorBoundary>
+
+      {/* Sub Navigation */}
+      <SubNavigation 
+        sections={subSections}
+        activeSection={activeTab}
+        onSectionChange={setActiveTab}
+      />
+
+      {/* Tab Content */}
+      {activeTab === 'dashboard' && renderDashboard()}
+      {activeTab === 'analytics' && renderAdvancedAnalytics()}
+      {activeTab === 'monthly' && renderMonthlyAnalysis()}
+      {activeTab === 'financial' && renderFinancialOverview()}
+      {activeTab === 'annual' && renderAnnualSummary()}
+    </div>
   );
 };
 

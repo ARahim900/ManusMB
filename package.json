@@ -11,6 +11,8 @@
     "postinstall": "echo 'Dependencies installed successfully'"
   },
   "dependencies": {
+    "@tailwindcss/postcss": "^4.1.11",
+    "dom-helpers": "^6.0.1",
     "firebase": "^11.9.1",
     "lucide-react": "^0.263.1",
     "react": "^18.2.0",

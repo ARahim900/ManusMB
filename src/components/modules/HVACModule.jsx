@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import SubNavigation from '../ui/SubNavigation';
+import { Settings, BarChart3, FileText, AlertTriangle, Database, LayoutDashboard } from 'lucide-react';
 
 // --- Helper Functions ---
 const generateId = () => {
@@ -199,6 +201,19 @@ export default function HVACModule() {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterBuilding, setFilterBuilding] = useState('');
     const [filterSystem, setFilterSystem] = useState('');
+    
+    // Add sub-navigation state
+    const [activeSubSection, setActiveSubSection] = useState('dashboard');
+
+    // Define sub-navigation sections
+    const subSections = [
+      { name: 'Dashboard', id: 'dashboard', icon: LayoutDashboard },
+      { name: 'PPM Records', id: 'records', icon: Database },
+      { name: 'Analytics', id: 'analytics', icon: BarChart3 },
+      { name: 'Maintenance', id: 'maintenance', icon: Settings },
+      { name: 'Issues', id: 'issues', icon: AlertTriangle },
+      { name: 'Reports', id: 'reports', icon: FileText }
+    ];
 
     const STORAGE_KEY = 'hvac-ppm-tracker-data';
 
@@ -346,251 +361,261 @@ const verifyInitialData = () => {
                     <p className="mt-1" style={{ color: '#0A1828' }}>Manage and track HVAC/BMS equipment maintenance across all buildings.</p>
                 </header>
 
-                {/* Debug Information */}
-                <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: '#C3FBF4', border: '2px solid #A8D5E3' }}>
-                    <h3 className="font-bold mb-2" style={{ color: '#5f5168' }}>Debug Information:</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        <div>
-                            <span className="font-medium" style={{ color: '#0A1828' }}>Total Records: </span>
-                            <span style={{ color: '#5f5168' }}>{records.length}</span>
-                        </div>
-                        <div>
-                            <span className="font-medium" style={{ color: '#0A1828' }}>Filtered Records: </span>
-                            <span style={{ color: '#5f5168' }}>{filteredRecords.length}</span>
-                        </div>
-                        <div>
-                            <span className="font-medium" style={{ color: '#0A1828' }}>Buildings Found: </span>
-                            <span style={{ color: '#5f5168' }}>{buildings.length}</span>
-                        </div>
-                    </div>
-                    <div className="mt-2">
-                        <span className="font-medium" style={{ color: '#0A1828' }}>Buildings: </span>
-                        <span style={{ color: '#5f5168' }}>{buildings.join(', ') || 'None'}</span>
-                    </div>
-                    <div className="mt-2">
-                        <span className="font-medium" style={{ color: '#0A1828' }}>Systems: </span>
-                        <span style={{ color: '#5f5168' }}>{mainSystems.join(', ') || 'None'}</span>
-                    </div>
-                    {records.length > 0 && (
-                        <div className="mt-2">
-                            <span className="font-medium" style={{ color: '#0A1828' }}>Sample Record: </span>
-                            <span style={{ color: '#5f5168' }} className="text-xs">
-                                Building: {records[0]?.building}, Equipment: {records[0]?.equipment}
-                            </span>
-                        </div>
-                    )}
-                    <button 
-                        onClick={() => {
-                            console.log('Full records data:', records);
-                            console.log('Filtered records:', filteredRecords);
-                            console.log('localStorage key:', STORAGE_KEY);
-                            console.log('localStorage data:', localStorage.getItem(STORAGE_KEY));
-                        }}
-                        className="mt-2 px-3 py-1 rounded text-xs" 
-                        style={{ backgroundColor: '#5f5168', color: '#ffffff' }}
-                    >
-                        Log Data to Console
-                    </button>
-                </div>
+                {/* Sub Navigation */}
+                <SubNavigation 
+                  sections={subSections}
+                  activeSection={activeSubSection}
+                  onSectionChange={setActiveSubSection}
+                />
 
-                {/* Dashboard Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div className="p-6 rounded-xl shadow-md" style={{ backgroundColor: '#ffffff' }}>
+                {/* Conditional Content Based on Active Section */}
+                {activeSubSection === 'dashboard' && (
+                  <>
+                    {/* Dashboard Summary Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                      <div className="p-6 rounded-xl shadow-md" style={{ backgroundColor: '#ffffff' }}>
                         <div className="flex items-center">
-                            <div className="p-3 rounded-full" style={{ backgroundColor: '#A8D5E3' }}>
-                                <span className="text-2xl font-bold" style={{ color: '#5f5168' }}>🏢</span>
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium" style={{ color: '#0A1828' }}>Total Buildings</p>
-                                <p className="text-2xl font-bold" style={{ color: '#5f5168' }}>
-                                    {buildings.length}
-                                </p>
-                            </div>
+                          <div className="p-3 rounded-full" style={{ backgroundColor: '#A8D5E3' }}>
+                            <span className="text-2xl font-bold" style={{ color: '#5f5168' }}>🏢</span>
+                          </div>
+                          <div className="ml-4">
+                            <p className="text-sm font-medium" style={{ color: '#0A1828' }}>Total Buildings</p>
+                            <p className="text-2xl font-bold" style={{ color: '#5f5168' }}>
+                              {buildings.length}
+                            </p>
+                          </div>
                         </div>
-                    </div>
+                      </div>
 
-                    <div className="p-6 rounded-xl shadow-md" style={{ backgroundColor: '#ffffff' }}>
+                      <div className="p-6 rounded-xl shadow-md" style={{ backgroundColor: '#ffffff' }}>
                         <div className="flex items-center">
-                            <div className="p-3 rounded-full" style={{ backgroundColor: '#C3FBF4' }}>
-                                <span className="text-2xl font-bold" style={{ color: '#5f5168' }}>⚙️</span>
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium" style={{ color: '#0A1828' }}>Total Equipment</p>
-                                <p className="text-2xl font-bold" style={{ color: '#5f5168' }}>
-                                    {filteredRecords.length}
-                                </p>
-                            </div>
+                          <div className="p-3 rounded-full" style={{ backgroundColor: '#C3FBF4' }}>
+                            <span className="text-2xl font-bold" style={{ color: '#5f5168' }}>⚙️</span>
+                          </div>
+                          <div className="ml-4">
+                            <p className="text-sm font-medium" style={{ color: '#0A1828' }}>Total Equipment</p>
+                            <p className="text-2xl font-bold" style={{ color: '#5f5168' }}>
+                              {filteredRecords.length}
+                            </p>
+                          </div>
                         </div>
-                    </div>
+                      </div>
 
-                    <div className="p-6 rounded-xl shadow-md" style={{ backgroundColor: '#ffffff' }}>
+                      <div className="p-6 rounded-xl shadow-md" style={{ backgroundColor: '#ffffff' }}>
                         <div className="flex items-center">
-                            <div className="p-3 rounded-full" style={{ backgroundColor: '#F2F0EA' }}>
-                                <span className="text-2xl font-bold" style={{ color: '#5f5168' }}>🔧</span>
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium" style={{ color: '#0A1828' }}>Critical Issues</p>
-                                <p className="text-2xl font-bold" style={{ color: '#5f5168' }}>
-                                    {filteredRecords.filter(record => 
-                                        record.ppm4.toLowerCase().includes('need to replace') || 
-                                        record.ppm4.toLowerCase().includes('defective') ||
-                                        record.ppm4.toLowerCase().includes('no gas')
-                                    ).length}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="p-6 rounded-xl shadow-md" style={{ backgroundColor: '#ffffff' }}>
-                        <div className="flex items-center">
-                            <div className="p-3 rounded-full" style={{ backgroundColor: '#BFA181' }}>
-                                <span className="text-2xl font-bold" style={{ color: '#ffffff' }}>📋</span>
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-sm font-medium" style={{ color: '#0A1828' }}>Maintenance Systems</p>
-                                <p className="text-2xl font-bold" style={{ color: '#5f5168' }}>
-                                    {mainSystems.length}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Building-wise Summary */}
-                <div className="p-6 rounded-xl shadow-md mb-6" style={{ backgroundColor: '#ffffff' }}>
-                    <h3 className="text-xl font-bold mb-4" style={{ color: '#5f5168' }}>Building Summary</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-                        {buildings.map(building => {
-                            const buildingRecords = filteredRecords.filter(record => record.building === building);
-                            const criticalIssues = buildingRecords.filter(record => 
+                          <div className="p-3 rounded-full" style={{ backgroundColor: '#F2F0EA' }}>
+                            <span className="text-2xl font-bold" style={{ color: '#5f5168' }}>🔧</span>
+                          </div>
+                          <div className="ml-4">
+                            <p className="text-sm font-medium" style={{ color: '#0A1828' }}>Critical Issues</p>
+                            <p className="text-2xl font-bold" style={{ color: '#5f5168' }}>
+                              {filteredRecords.filter(record => 
                                 record.ppm4.toLowerCase().includes('need to replace') || 
                                 record.ppm4.toLowerCase().includes('defective') ||
                                 record.ppm4.toLowerCase().includes('no gas')
-                            ).length;
-                            
-                            return (
-                                <div key={building} className="text-center p-4 rounded-lg" 
-                                    style={{ 
-                                        backgroundColor: criticalIssues > 0 ? '#A8D5E3' : '#F2F0EA',
-                                        border: criticalIssues > 0 ? '2px solid #5f5168' : '1px solid #BFA181'
-                                    }}>
-                                    <h4 className="font-bold text-lg" style={{ color: '#5f5168' }}>{building}</h4>
-                                    <p className="text-sm" style={{ color: '#0A1828' }}>
-                                        {buildingRecords.length} Equipment
-                                    </p>
-                                    {criticalIssues > 0 && (
-                                        <p className="text-xs font-bold mt-1" style={{ color: '#5f5168' }}>
-                                            {criticalIssues} Critical
-                                        </p>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
+                              ).length}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
 
-                <div className="p-6 rounded-xl shadow-md mb-6" style={{ backgroundColor: '#ffffff' }}>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="p-6 rounded-xl shadow-md" style={{ backgroundColor: '#ffffff' }}>
+                        <div className="flex items-center">
+                          <div className="p-3 rounded-full" style={{ backgroundColor: '#BFA181' }}>
+                            <span className="text-2xl font-bold" style={{ color: '#ffffff' }}>📋</span>
+                          </div>
+                          <div className="ml-4">
+                            <p className="text-sm font-medium" style={{ color: '#0A1828' }}>Maintenance Systems</p>
+                            <p className="text-2xl font-bold" style={{ color: '#5f5168' }}>
+                              {mainSystems.length}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Building-wise Summary */}
+                    <div className="p-6 rounded-xl shadow-md mb-6" style={{ backgroundColor: '#ffffff' }}>
+                      <h3 className="text-xl font-bold mb-4" style={{ color: '#5f5168' }}>Building Summary</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+                        {buildings.map(building => {
+                          const buildingRecords = filteredRecords.filter(record => record.building === building);
+                          const criticalIssues = buildingRecords.filter(record => 
+                            record.ppm4.toLowerCase().includes('need to replace') || 
+                            record.ppm4.toLowerCase().includes('defective') ||
+                            record.ppm4.toLowerCase().includes('no gas')
+                          ).length;
+                          
+                          return (
+                            <div key={building} className="text-center p-4 rounded-lg" 
+                              style={{ 
+                                backgroundColor: criticalIssues > 0 ? '#A8D5E3' : '#F2F0EA',
+                                border: criticalIssues > 0 ? '2px solid #5f5168' : '1px solid #BFA181'
+                              }}>
+                              <h4 className="font-bold text-lg" style={{ color: '#5f5168' }}>{building}</h4>
+                              <p className="text-sm" style={{ color: '#0A1828' }}>
+                                {buildingRecords.length} Equipment
+                              </p>
+                              {criticalIssues > 0 && (
+                                <p className="text-xs font-bold mt-1" style={{ color: '#5f5168' }}>
+                                  {criticalIssues} Critical
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {activeSubSection === 'records' && (
+                  <>
+                    {/* Controls and Table */}
+                    <div className="p-6 rounded-xl shadow-md mb-6" style={{ backgroundColor: '#ffffff' }}>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <input
-                            type="text"
-                            placeholder="Search all fields..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="p-3 border rounded-lg focus:ring-2 focus:border-transparent"
-                            style={{ borderColor: '#BFA181', focusRingColor: '#5f5168' }}
+                          type="text"
+                          placeholder="Search all fields..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="p-3 border rounded-lg focus:ring-2 focus:border-transparent"
+                          style={{ borderColor: '#BFA181', focusRingColor: '#5f5168' }}
                         />
                          <select
-                            value={filterBuilding}
-                            onChange={(e) => setFilterBuilding(e.target.value)}
-                             className="p-3 border rounded-lg focus:ring-2 focus:border-transparent"
-                             style={{ borderColor: '#BFA181', focusRingColor: '#5f5168' }}
+                          value={filterBuilding}
+                          onChange={(e) => setFilterBuilding(e.target.value)}
+                           className="p-3 border rounded-lg focus:ring-2 focus:border-transparent"
+                           style={{ borderColor: '#BFA181', focusRingColor: '#5f5168' }}
                         >
-                            <option value="">All Buildings</option>
-                            {buildings.map(b => <option key={b} value={b}>{b}</option>)}
+                          <option value="">All Buildings</option>
+                          {buildings.map(b => <option key={b} value={b}>{b}</option>)}
                         </select>
                         <select
-                            value={filterSystem}
-                            onChange={(e) => setFilterSystem(e.target.value)}
-                            className="p-3 border rounded-lg focus:ring-2 focus:border-transparent"
-                            style={{ borderColor: '#BFA181', focusRingColor: '#5f5168' }}
+                          value={filterSystem}
+                          onChange={(e) => setFilterSystem(e.target.value)}
+                          className="p-3 border rounded-lg focus:ring-2 focus:border-transparent"
+                          style={{ borderColor: '#BFA181', focusRingColor: '#5f5168' }}
                         >
-                            <option value="">All Systems</option>
-                            {mainSystems.map(s => <option key={s} value={s}>{s}</option>)}
+                          <option value="">All Systems</option>
+                          {mainSystems.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
+                      </div>
+                       <div className="mt-4 flex justify-end">
+                           <button
+                              onClick={handleAddNew}
+                              className="font-bold py-3 px-6 rounded-lg shadow hover:opacity-80 transition-opacity"
+                              style={{ backgroundColor: '#5f5168', color: '#ffffff' }}
+                          >
+                              Add New Record
+                          </button>
+                       </div>
                     </div>
-                     <div className="mt-4 flex justify-end">
-                         <button
-                            onClick={handleAddNew}
-                            className="font-bold py-3 px-6 rounded-lg shadow hover:opacity-80 transition-opacity"
-                            style={{ backgroundColor: '#5f5168', color: '#ffffff' }}
-                        >
-                            Add New Record
-                        </button>
-                     </div>
-                </div>
 
-                <div className="overflow-x-auto rounded-xl shadow-md" style={{ backgroundColor: '#ffffff' }}>
-                    <table className="w-full text-sm text-left">
+                    <div className="overflow-x-auto rounded-xl shadow-md" style={{ backgroundColor: '#ffffff' }}>
+                      <table className="w-full text-sm text-left">
                         <thead className="text-xs uppercase" style={{ backgroundColor: '#F2F0EA', color: '#0A1828' }}>
-                            <tr>
-                                {['Building', 'Main System', 'Equipment', 'PPM1 Findings', 'PPM2 Findings', 'PPM3 Findings', 'PPM4 Findings', 'Common Issues', 'Fixed Issues', 'Notes', 'Actions'].map(header => (
-                                    <th key={header} scope="col" className="px-6 py-3 min-w-[150px]">{header}</th>
-                                ))}
-                            </tr>
+                          <tr>
+                            {['Building', 'Main System', 'Equipment', 'PPM1 Findings', 'PPM2 Findings', 'PPM3 Findings', 'PPM4 Findings', 'Common Issues', 'Fixed Issues', 'Notes', 'Actions'].map(header => (
+                              <th key={header} scope="col" className="px-6 py-3 min-w-[150px]">{header}</th>
+                            ))}
+                          </tr>
                         </thead>
                         <tbody>
-                            {filteredRecords.map((record, index) => (
-                                <tr key={record.id} className="border-b hover:opacity-80 transition-opacity" 
-                                    style={{ 
-                                        backgroundColor: index % 2 === 0 ? '#ffffff' : '#fffeff',
-                                        borderBottomColor: '#F2F0EA'
-                                    }}>
-                                    <td className="px-6 py-4 font-medium" style={{ color: '#5f5168' }}>{record.building}</td>
-                                    <td className="px-6 py-4" style={{ color: '#0A1828' }}>{record.mainSystem}</td>
-                                    <td className="px-6 py-4" style={{ color: '#0A1828' }}>{record.equipment}</td>
-                                    <td className="px-6 py-4 whitespace-pre-wrap" style={{ color: '#0A1828' }}>{record.ppm1}</td>
-                                    <td className="px-6 py-4 whitespace-pre-wrap" style={{ color: '#0A1828' }}>{record.ppm2}</td>
-                                    <td className="px-6 py-4 whitespace-pre-wrap" style={{ color: '#0A1828' }}>{record.ppm3}</td>
-                                    <td className="px-6 py-4 whitespace-pre-wrap" style={{ color: '#0A1828' }}>{record.ppm4}</td>
-                                    <td className="px-6 py-4 whitespace-pre-wrap" style={{ color: '#0A1828' }}>{record.commonIssues}</td>
-                                    <td className="px-6 py-4 whitespace-pre-wrap" style={{ color: '#0A1828' }}>{record.fixedIssues}</td>
-                                    <td className="px-6 py-4 whitespace-pre-wrap" style={{ color: '#0A1828' }}>{record.notes}</td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center space-x-2">
-                                            <button onClick={() => handleEdit(record)} 
-                                                className="font-medium hover:underline" 
-                                                style={{ color: '#5f5168' }}>
-                                                Edit
-                                            </button>
-                                            <button onClick={() => handleDeleteRequest(record.id)} 
-                                                className="font-medium hover:underline" 
-                                                style={{ color: '#A8D5E3' }}>
-                                                Delete
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                          {filteredRecords.map((record, index) => (
+                            <tr key={record.id} className="border-b hover:opacity-80 transition-opacity" 
+                              style={{ 
+                                backgroundColor: index % 2 === 0 ? '#ffffff' : '#fffeff',
+                                borderBottomColor: '#F2F0EA'
+                              }}>
+                              <td className="px-6 py-4 font-medium" style={{ color: '#5f5168' }}>{record.building}</td>
+                              <td className="px-6 py-4" style={{ color: '#0A1828' }}>{record.mainSystem}</td>
+                              <td className="px-6 py-4" style={{ color: '#0A1828' }}>{record.equipment}</td>
+                              <td className="px-6 py-4 whitespace-pre-wrap" style={{ color: '#0A1828' }}>{record.ppm1}</td>
+                              <td className="px-6 py-4 whitespace-pre-wrap" style={{ color: '#0A1828' }}>{record.ppm2}</td>
+                              <td className="px-6 py-4 whitespace-pre-wrap" style={{ color: '#0A1828' }}>{record.ppm3}</td>
+                              <td className="px-6 py-4 whitespace-pre-wrap" style={{ color: '#0A1828' }}>{record.ppm4}</td>
+                              <td className="px-6 py-4 whitespace-pre-wrap" style={{ color: '#0A1828' }}>{record.commonIssues}</td>
+                              <td className="px-6 py-4 whitespace-pre-wrap" style={{ color: '#0A1828' }}>{record.fixedIssues}</td>
+                              <td className="px-6 py-4 whitespace-pre-wrap" style={{ color: '#0A1828' }}>{record.notes}</td>
+                              <td className="px-6 py-4">
+                                <div className="flex items-center space-x-2">
+                                  <button onClick={() => handleEdit(record)} 
+                                    className="font-medium hover:underline" 
+                                    style={{ color: '#5f5168' }}>
+                                    Edit
+                                  </button>
+                                  <button onClick={() => handleDeleteRequest(record.id)} 
+                                    className="font-medium hover:underline" 
+                                    style={{ color: '#A8D5E3' }}>
+                                    Delete
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
                         </tbody>
-                    </table>
-                </div>
-                 {filteredRecords.length === 0 && (
-                    <div className="text-center py-10 rounded-xl shadow-md mt-6" style={{ backgroundColor: '#ffffff' }}>
-                        <p style={{ color: '#BFA181' }}>No records found. Try adding a new record or adjusting your filters.</p>
-                        <p className="text-sm mt-2" style={{ color: '#0A1828' }}>
-                            Total records in system: {records.length} | Search term: "{searchTerm}" | Building filter: "{filterBuilding}" | System filter: "{filterSystem}"
-                        </p>
-                        <button 
-                            onClick={() => {
-                                localStorage.removeItem(STORAGE_KEY);
-                                window.location.reload();
-                            }}
-                            className="mt-4 px-4 py-2 rounded-lg" 
-                            style={{ backgroundColor: '#A8D5E3', color: '#5f5168' }}
-                        >
-                            Reset Data & Reload
-                        </button>
+                      </table>
                     </div>
+                     {filteredRecords.length === 0 && (
+                        <div className="text-center py-10 rounded-xl shadow-md mt-6" style={{ backgroundColor: '#ffffff' }}>
+                            <p style={{ color: '#BFA181' }}>No records found. Try adding a new record or adjusting your filters.</p>
+                            <p className="text-sm mt-2" style={{ color: '#0A1828' }}>
+                                Total records in system: {records.length} | Search term: "{searchTerm}" | Building filter: "{filterBuilding}" | System filter: "{filterSystem}"
+                            </p>
+                            <button 
+                                onClick={() => {
+                                    localStorage.removeItem(STORAGE_KEY);
+                                    window.location.reload();
+                                }}
+                                className="mt-4 px-4 py-2 rounded-lg" 
+                                style={{ backgroundColor: '#A8D5E3', color: '#5f5168' }}
+                            >
+                                Reset Data & Reload
+                            </button>
+                        </div>
+                    )}
+                  </>
+                )}
+
+                {activeSubSection === 'analytics' && (
+                  <div className="chart-card">
+                    <div className="text-center py-12">
+                      <BarChart3 className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-slate-700 mb-2">Analytics Dashboard</h3>
+                      <p className="text-slate-500">Comprehensive analysis of HVAC system performance</p>
+                    </div>
+                  </div>
+                )}
+
+                {activeSubSection === 'maintenance' && (
+                  <div className="chart-card">
+                    <div className="text-center py-12">
+                      <Settings className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-slate-700 mb-2">Maintenance Scheduler</h3>
+                      <p className="text-slate-500">Schedule and track preventive maintenance activities</p>
+                    </div>
+                  </div>
+                )}
+
+                {activeSubSection === 'issues' && (
+                  <div className="chart-card">
+                    <div className="text-center py-12">
+                      <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-slate-700 mb-2">Critical Issues</h3>
+                      <p className="text-slate-500">Monitor and resolve critical HVAC system issues</p>
+                    </div>
+                  </div>
+                )}
+
+                {activeSubSection === 'reports' && (
+                  <div className="chart-card">
+                    <div className="text-center py-12">
+                      <FileText className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-slate-700 mb-2">HVAC Reports</h3>
+                      <p className="text-slate-500">Generate comprehensive maintenance and performance reports</p>
+                    </div>
+                  </div>
                 )}
             </div>
 
@@ -605,9 +630,9 @@ const verifyInitialData = () => {
             )}
             {isConfirmModalOpen && (
                 <ConfirmModal
-                    message="Are you sure you want to delete this record?"
                     onConfirm={handleConfirmDelete}
                     onCancel={handleCancelDelete}
+                    message="Are you sure you want to delete this record? This action cannot be undone."
                 />
             )}
         </div>

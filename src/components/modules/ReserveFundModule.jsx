@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import MetricCard from '../ui/MetricCard';
 import ChartCard from '../ui/ChartCard';
+import SubNavigation from '../ui/SubNavigation';
 import { Button } from '../ui/button';
 import { 
   DollarSign, 
@@ -18,7 +19,8 @@ import {
   ChevronRight,
   ChevronUp,
   ChevronDown,
-  MoreHorizontal
+  MoreHorizontal,
+  LayoutDashboard
 } from 'lucide-react';
 import { 
   AreaChart,
@@ -246,12 +248,13 @@ const ReserveFundModule = () => {
   const availableSectors = ['all', ...new Set(reserveFundData.map(unit => unit.sector))];
   const availableUnitTypes = ['all', ...new Set(reserveFundData.map(unit => unit.unitType))];
 
-  const tabs = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'sectors', label: 'Sector Analysis' },
-    { id: 'units', label: 'Unit Analysis' },
-    { id: 'trends', label: 'Trends & Forecast' },
-    { id: 'data-quality', label: 'Data Quality' }
+  // Define sub-navigation sections with updated structure
+  const subSections = [
+    { id: 'overview', name: 'Overview', icon: LayoutDashboard },
+    { id: 'sectors', name: 'Sector Analysis', icon: Building2 },
+    { id: 'units', name: 'Unit Analysis', icon: Home },
+    { id: 'trends', name: 'Trends & Forecast', icon: TrendingUp },
+    { id: 'data-quality', name: 'Data Quality', icon: AlertTriangle }
   ];
 
   return (
@@ -276,26 +279,12 @@ const ReserveFundModule = () => {
         </div>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="flex space-x-8">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === tab.id
-                  ? 'border-[#5f5168] text-[#5f5168]'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
-
-
+      {/* Sub Navigation */}
+      <SubNavigation 
+        sections={subSections}
+        activeSection={activeTab}
+        onSectionChange={setActiveTab}
+      />
 
       {/* Key Reserve Fund Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -303,8 +292,6 @@ const ReserveFundModule = () => {
           <MetricCard key={index} {...metric} />
         ))}
       </div>
-
-
 
       {/* Tab Content */}
       {activeTab === 'overview' && (

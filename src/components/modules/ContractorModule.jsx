@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import MetricCard from '../ui/MetricCard';
 import ChartCard from '../ui/ChartCard';
+import SubNavigation from '../ui/SubNavigation';
 import { Button } from '@/components/ui/button';
 import { 
   Users, 
@@ -10,7 +11,10 @@ import {
   FileText,
   Calendar,
   Star,
-  TrendingUp
+  TrendingUp,
+  LayoutDashboard,
+  Settings,
+  Shield
 } from 'lucide-react';
 import { 
   PieChart,
@@ -383,11 +387,12 @@ const ContractorModule = () => {
     { date: '2024-11-01', activity: 'Updated contract - Bahwan Engineering Fire alarm AMC', type: 'renewal' }
   ];
 
-  const tabs = [
-    { id: 'dashboard', label: 'Dashboard' },
-    { id: 'contracts', label: 'Contract Management' },
-    { id: 'performance', label: 'Performance Reviews' },
-    { id: 'compliance', label: 'Compliance & Documents' }
+  // Define sub-navigation sections
+  const subSections = [
+    { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
+    { id: 'contracts', name: 'Contract Management', icon: FileText },
+    { id: 'performance', name: 'Performance Reviews', icon: TrendingUp },
+    { id: 'compliance', name: 'Compliance & Documents', icon: Shield }
   ];
 
   const getStatusColor = (status) => {
@@ -438,24 +443,12 @@ const ContractorModule = () => {
         </div>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="flex space-x-8">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === tab.id
-                  ? 'border-orange-500 text-orange-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
+      {/* Sub Navigation */}
+      <SubNavigation 
+        sections={subSections}
+        activeSection={activeTab}
+        onSectionChange={setActiveTab}
+      />
 
       {/* Tab Content */}
       {activeTab === 'dashboard' && (

@@ -39,6 +39,7 @@ import GaugeChart from '../ui/GaugeChart';
 import MetricCard from '../ui/MetricCard';
 import ChartCard from '../ui/ChartCard';
 import { Button } from '@/components/ui/button';
+import SubNavigation from '../ui/SubNavigation';
 
 // Design System Colors
 const COLORS = {
@@ -273,41 +274,15 @@ Total System Loss: Overall water loss calculation with efficiency metrics
     }, 2000);
   };
 
-  // Water Sub-navigation
-  const WaterSubNav = () => {
-    const subSections = [
-      { name: 'Overview', id: 'Overview', icon: LayoutDashboard },
-      { name: 'Water Loss Analysis', id: 'WaterLoss', icon: TrendingUp },
-      { name: 'Zone Analysis', id: 'ZoneAnalysis', icon: BarChart2 },
-      { name: 'Zone Details', id: 'ZoneDetails', icon: Database },
-      { name: 'Main Database', id: 'MainDatabase', icon: Database },
-      { name: 'Overview', id: 'Overview_New', icon: CheckCircle },
-    ];
-    
-    return (
-      <div className="mb-6 print:hidden flex justify-center">
-        <div className="bg-white dark:bg-gray-800 shadow-md rounded-full p-1.5 inline-flex space-x-1 border border-slate-200 dark:border-gray-600 transition-colors duration-300">
-          {subSections.map((tab) => {
-            const isActive = activeWaterSubSection === tab.id;
-            return ( 
-              <button 
-                key={tab.id} 
-                onClick={() => setActiveWaterSubSection(tab.id)} 
-                className={`px-4 py-2 rounded-full text-sm font-medium flex items-center space-x-2 transition-all duration-200 ease-in-out transform hover:scale-105 ${
-                  isActive 
-                    ? 'bg-primary text-white dark:bg-blue-600' 
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-              > 
-                <tab.icon size={18} className={isActive ? 'text-white' : 'text-primary dark:text-blue-400'}/> 
-                <span>{tab.name}</span> 
-              </button> 
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
+  // Define sub-navigation sections
+  const subSections = [
+    { name: 'Overview', id: 'Overview', icon: LayoutDashboard },
+    { name: 'Water Loss Analysis', id: 'WaterLoss', icon: TrendingUp },
+    { name: 'Zone Analysis', id: 'ZoneAnalysis', icon: BarChart2 },
+    { name: 'Zone Details', id: 'ZoneDetails', icon: Database },
+    { name: 'Main Database', id: 'MainDatabase', icon: Database },
+    { name: 'Overview', id: 'Overview_New', icon: CheckCircle },
+  ];
 
   return (
     <div className="space-y-6 p-6 bg-background-primary dark:bg-gray-900 min-h-screen transition-colors duration-300">
@@ -317,7 +292,12 @@ Total System Loss: Overall water loss calculation with efficiency metrics
         <p className="text-secondary dark:text-gray-300 transition-colors duration-300">Real Hierarchical Water Distribution Monitoring & Loss Analysis</p>
       </div>
 
-      <WaterSubNav />
+      {/* Sub Navigation */}
+      <SubNavigation 
+        sections={subSections}
+        activeSection={activeWaterSubSection}
+        onSectionChange={setActiveWaterSubSection}
+      />
 
       {activeWaterSubSection === 'Overview' && (
         <>
