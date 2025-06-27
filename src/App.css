@@ -585,6 +585,7 @@ body {
 @media (max-width: 767px) {
   .page-container {
     padding: var(--spacing-md);
+    padding-bottom: 120px; /* Extra space for mobile navigation */
   }
   
   .page-title {
@@ -612,6 +613,7 @@ body {
   .btn {
     padding: 10px 16px;
     font-size: 0.875rem;
+    min-height: 48px; /* Better touch targets */
   }
   
   .sidebar {
@@ -630,6 +632,41 @@ body {
   
   .content-area {
     padding: var(--spacing-md);
+    padding-bottom: 120px; /* Extra space for mobile navigation */
+  }
+
+  /* Mobile navigation specific styles */
+  .mobile-nav-safe-area {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Enhanced touch targets for mobile */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Improved mobile search overlay */
+  .mobile-search-overlay {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  /* Better mobile header spacing */
+  .header {
+    height: 56px; /* Taller on mobile for better touch targets */
+  }
+
+  /* Mobile navigation buttons */
+  .mobile-nav-button {
+    min-height: 48px;
+    min-width: 48px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+  }
+
+  .mobile-nav-button:active {
+    transform: scale(0.95);
   }
 }
 

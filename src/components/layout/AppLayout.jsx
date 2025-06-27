@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import TopHeader from './TopHeader';
 import Breadcrumbs from '../ui/Breadcrumbs';
+import MobileNavigation from '../ui/MobileNavigation';
 
 const AppLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -109,11 +110,14 @@ const AppLayout = ({ children }) => {
         
         {/* Content Area */}
         <main className="overflow-auto content-area bg-background-primary dark:bg-gray-900 transition-colors duration-300" style={{ minHeight: 'calc(100vh - 64px)' }}>
-          <div className="page-container">
+          <div className="page-container pb-20 md:pb-6">
             <Breadcrumbs />
             {children}
           </div>
         </main>
+
+        {/* Mobile Navigation */}
+        <MobileNavigation />
       </div>
       
       {/* Mobile Sidebar Overlay */}
