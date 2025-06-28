@@ -50,8 +50,8 @@ A comprehensive, modern web application for managing facility operations includi
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-repo/muscat-bay-management.git
-   cd muscat-bay-management
+   git clone https://github.com/ARahim900/ManusMB.git
+   cd ManusMB
    ```
 
 2. **Install dependencies**
@@ -260,8 +260,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For support and questions:
 - Email: admin@muscatbay.com
-- Documentation: [Wiki](https://github.com/your-repo/muscat-bay-management/wiki)
-- Issues: [GitHub Issues](https://github.com/your-repo/muscat-bay-management/issues)
+- Documentation: [Wiki](https://github.com/ARahim900/ManusMB/wiki)
+- Issues: [GitHub Issues](https://github.com/ARahim900/ManusMB/issues)
 
 ## 🎯 Roadmap
 

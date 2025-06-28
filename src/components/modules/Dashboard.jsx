@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import MetricCard from '../ui/MetricCard';
+import EnhancedMetricCard from '../ui/EnhancedMetricCard';
 import DetailedCard from '../ui/DetailedCard';
 import Button from '../ui/button';
 import LoadingSpinner from '../ui/LoadingSpinner';
+import ResponsiveContainer, { useResponsive } from '../ui/ResponsiveContainer';
+import AdaptiveGrid, { MetricsGrid } from '../ui/AdaptiveGrid';
+import ResponsiveModal from '../ui/ResponsiveModal';
 import { 
   Zap, 
   Droplets, 
@@ -17,12 +21,17 @@ import {
   Bell,
   Activity,
   Calendar,
-  BarChart3
+  BarChart3,
+  Settings,
+  Maximize2
 } from 'lucide-react';
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [selectedAlert, setSelectedAlert] = useState(null);
+  const [showQuickActions, setShowQuickActions] = useState(false);
+  const { isMobile, isTablet, screenInfo } = useResponsive();
 
   // Simulate loading and update time
   useEffect(() => {
@@ -35,31 +44,57 @@ const Dashboard = () => {
     };
   }, []);
 
-  // KPI Cards data following components.json specification
+  // Enhanced KPI Cards data with trends and additional features
   const kpiCards = [
     {
       title: "Total Energy Consumption",
-      value: "1,738,034 kWh",
+      value: "1,738,034",
+      unit: "kWh",
       isPrimary: true,
-      tooltip: "Total electricity consumption across all systems for the current period. Includes residential, commercial, and infrastructure consumption."
+      icon: Zap,
+      iconColor: "text-yellow-500",
+      trend: "up",
+      trendValue: "+12.3%",
+      trendLabel: "vs last month",
+      tooltip: "Total electricity consumption across all systems for the current period. Includes residential, commercial, and infrastructure consumption.",
+      onClick: () => window.location.href = '/electricity'
     },
     {
       title: "Water System Efficiency", 
-      value: "76.2%",
+      value: "76.2",
+      unit: "%",
       isPrimary: false,
-      tooltip: "Current water system efficiency based on input vs. output flow rates, leak detection, and distribution performance."
+      icon: Droplets,
+      iconColor: "text-blue-500",
+      trend: "down",
+      trendValue: "-2.1%",
+      trendLabel: "needs attention",
+      tooltip: "Current water system efficiency based on input vs. output flow rates, leak detection, and distribution performance.",
+      onClick: () => window.location.href = '/water'
     },
     {
-      title: "Current Balance",
-      value: "$4,836.00",
+      title: "Reserve Fund Balance",
+      value: "$4,836",
       isPrimary: true,
-      tooltip: "Available reserve funds balance including maintenance reserves, operational costs, and emergency funds."
+      icon: DollarSign,
+      iconColor: "text-green-500",
+      trend: "up",
+      trendValue: "+5.7%",
+      trendLabel: "this quarter",
+      tooltip: "Available reserve funds balance including maintenance reserves, operational costs, and emergency funds.",
+      onClick: () => window.location.href = '/reserve-fund'
     },
     {
       title: "Active Contracts",
       value: "25",
       isPrimary: false,
-      tooltip: "Number of currently active maintenance and service contracts across all systems and facilities."
+      icon: Users,
+      iconColor: "text-purple-500",
+      trend: "neutral",
+      trendValue: "2 expiring",
+      trendLabel: "this month",
+      tooltip: "Number of currently active maintenance and service contracts across all systems and facilities.",
+      onClick: () => window.location.href = '/contractor'
     }
   ];
 
@@ -157,43 +192,71 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen space-y-6">
+    <ResponsiveContainer 
+      className="min-h-screen space-y-6"
+      mobileLayout="stack"
+      fullHeight={true}
+    >
       {/* Header Section */}
       <div className="page-header">
         <div>
-          <h1 className="page-title">
+          <h1 className={`page-title ${isMobile ? 'text-2xl' : 'text-3xl'}`}>
             Muscat Bay Management System
           </h1>
           <p className="page-subtitle">
             Welcome back! Here's what's happening with your systems today.
           </p>
+          {isMobile && (
+            <div className="mt-2 text-xs text-gray-500">
+              Screen: {screenInfo.width}×{screenInfo.height} • {screenInfo.orientation}
+            </div>
+          )}
         </div>
         
-        <div className="flex items-center">
+        <div className="flex items-center space-x-2">
           <div className="btn btn-secondary btn-sm">
             {currentTime.toLocaleString('en-US', {
-              weekday: 'short',
+              weekday: isMobile ? 'short' : 'short',
               month: 'short',
               day: 'numeric',
               hour: '2-digit',
               minute: '2-digit'
             })}
           </div>
+          
+          {!isMobile && (
+            <button 
+              onClick={() => setShowQuickActions(true)}
+              className="btn btn-primary btn-sm"
+              title="Quick Actions"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* KPI Cards Grid */}
-      <div className="metrics-grid">
+      {/* Enhanced KPI Cards Grid */}
+      <MetricsGrid>
         {kpiCards.map((card, index) => (
-          <MetricCard
+          <EnhancedMetricCard
             key={index}
             title={card.title}
             value={card.value}
+            unit={card.unit}
             isPrimary={card.isPrimary}
+            icon={card.icon}
+            iconColor={card.iconColor}
+            trend={card.trend}
+            trendValue={card.trendValue}
+            trendLabel={card.trendLabel}
             tooltip={card.tooltip}
+            onClick={card.onClick}
+            loading={loading}
+            compact={isMobile}
           />
         ))}
-      </div>
+      </MetricsGrid>
 
       {/* Detailed Card and Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-lg">
@@ -278,7 +341,61 @@ const Dashboard = () => {
           })}
         </div>
       </div>
-    </div>
+
+      {/* Quick Actions Modal */}
+      <ResponsiveModal
+        isOpen={showQuickActions}
+        onClose={() => setShowQuickActions(false)}
+        title="Quick Actions"
+        size="md"
+      >
+        <div className="space-y-4 p-6">
+          {quickActions.map((action, index) => (
+            <Button
+              key={index}
+              label={action.label}
+              icon={action.icon}
+              variant={action.variant}
+              action={() => {
+                action.action();
+                setShowQuickActions(false);
+              }}
+              className="w-full"
+            />
+          ))}
+        </div>
+      </ResponsiveModal>
+
+      {/* Alert Details Modal */}
+      {selectedAlert && (
+        <ResponsiveModal
+          isOpen={!!selectedAlert}
+          onClose={() => setSelectedAlert(null)}
+          title="Alert Details"
+          size="lg"
+        >
+          <div className="p-6">
+            <p className="text-lg font-medium mb-4">{selectedAlert.message}</p>
+            <p className="text-gray-600 mb-4">{selectedAlert.time}</p>
+            <div className="flex justify-end space-x-2">
+              <Button
+                label="Dismiss"
+                variant="secondary"
+                action={() => setSelectedAlert(null)}
+              />
+              <Button
+                label={selectedAlert.actionLabel}
+                variant="primary"
+                action={() => {
+                  selectedAlert.action();
+                  setSelectedAlert(null);
+                }}
+              />
+            </div>
+          </div>
+        </ResponsiveModal>
+      )}
+    </ResponsiveContainer>
   );
 };
 

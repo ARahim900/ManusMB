@@ -1,8 +1,30 @@
 {
   "name": "muscat-bay-management-system",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "Comprehensive facility management solution for Muscat Bay operations including electricity monitoring, water systems, STP plant operations, and contractor tracking",
+  "author": "ARahim900",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ARahim900/ManusMB.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ARahim900/ManusMB/issues"
+  },
+  "homepage": "https://github.com/ARahim900/ManusMB#readme",
+  "keywords": [
+    "facility-management",
+    "react",
+    "dashboard",
+    "muscat-bay",
+    "vite",
+    "tailwindcss",
+    "electricity-monitoring",
+    "water-systems",
+    "stp-plant"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",

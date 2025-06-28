@@ -1,25 +1,43 @@
 {
   "name": "Muscat Bay Management System",
-  "short_name": "Muscat Bay",
-  "description": "Comprehensive facility management solution for Muscat Bay operations",
+  "short_name": "ManusMB",
+  "description": "Comprehensive facility management solution for Muscat Bay operations including electricity monitoring, water systems, STP plant operations, and contractor tracking",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#feffff",
+  "background_color": "#fafafa",
   "theme_color": "#5f5168",
   "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "dir": "ltr",
   "icons": [
     {
-      "src": "/android-chrome-192x192.png",
-      "sizes": "192x192",
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
       "type": "image/png"
     },
     {
+      "src": "/favicon-32x32.png", 
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
       "src": "/android-chrome-512x512.png",
-      "sizes": "512x512",
+      "sizes": "512x512", 
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
       "type": "image/png"
     }
   ],
-  "categories": ["business", "productivity", "utilities"],
-  "lang": "en",
-  "dir": "ltr"
+  "categories": ["business", "productivity", "utilities", "finance"]
 } 
