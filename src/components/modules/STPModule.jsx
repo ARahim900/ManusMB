@@ -1,9 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import MetricCard from '../ui/MetricCard';
 import ChartCard from '../ui/ChartCard';
-import LoadingSpinner from '../ui/LoadingSpinner';
-import ErrorBoundary from '../ui/ErrorBoundary';
-import SubNavigation from '../ui/SubNavigation';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
   Factory, 
@@ -20,7 +19,21 @@ import {
   BarChart3,
   Target,
   Activity,
-  Gauge
+  Gauge,
+  Wrench,
+  AlertCircle,
+  CheckSquare,
+  Zap,
+  Shield,
+  Leaf,
+  Clock,
+  ArrowUp,
+  ArrowDown,
+  Minus,
+  Beaker,
+  Thermometer,
+  Waves,
+  RotateCcw
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -37,313 +50,170 @@ import {
   PieChart,
   Pie,
   Cell,
-  ComposedChart
+  ComposedChart,
+  RadialBarChart,
+  RadialBar,
+  Legend
 } from 'recharts';
 
-// Import STP data service with complete user database
+// Import Enhanced STP data service
 import { 
-  monthlyPerformanceData,
-  financialAnalysisSummary,
-  getDataByMonth,
+  enhancedMonthlyData,
+  maintenanceCategories,
+  equipmentMetrics,
+  performanceMetrics,
   getMonthlyData,
-  getPerformanceMetrics,
-  getAnnualSummary,
+  getLatestMonth,
+  getDataByMonth,
+  getDailyAnalytics,
+  getEfficiencyTrends,
+  getFinancialForecast,
   TANKER_INCOME_PER_TRIP,
   TSE_SAVING_PER_M3,
   STP_DESIGN_CAPACITY
-} from '../../services/stpCleanDataService';
-
-console.log('=== STP DATA DEBUG (HARDCODED) ===');
-console.log('monthlyPerformanceData length:', monthlyPerformanceData.length);
-console.log('monthlyPerformanceData:', monthlyPerformanceData);
+} from '../../services/stpEnhancedDataService';
 
 const STPModule = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  
-  // Get the most recent month with data as default
-  const defaultMonth = useMemo(() => {
-    try {
-      console.log('Monthly performance data:', monthlyPerformanceData);
-      if (!monthlyPerformanceData || monthlyPerformanceData.length === 0) {
-        console.log('No monthly performance data available');
-        return '2025-06';
-      }
-      const sortedMonths = [...monthlyPerformanceData].sort((a, b) => new Date(b.monthKey) - new Date(a.monthKey));
-      console.log('Sorted months:', sortedMonths);
-      return sortedMonths[0]?.monthKey || '2025-06';
-    } catch (error) {
-      console.error('Error getting default month:', error);
-      return '2025-06';
-    }
-  }, []);
-  
-  const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [selectedMonth, setSelectedMonth] = useState(getLatestMonth()?.monthKey || '2025-06');
+  const [showMaintenanceDetails, setShowMaintenanceDetails] = useState(false);
 
-  // Get available months dynamically with error handling
-  const availableMonths = useMemo(() => {
-    try {
-      if (!monthlyPerformanceData || monthlyPerformanceData.length === 0) {
-        return [{ value: '2025-06', label: 'June 2025' }];
-      }
-      return [...monthlyPerformanceData]
-        .sort((a, b) => new Date(b.monthKey) - new Date(a.monthKey))
-        .map(month => ({
-          value: month.monthKey,
-          label: month.month
-        }));
-    } catch (error) {
-      console.error('Error processing available months:', error);
-      return [{ value: '2025-06', label: 'June 2025' }];
-    }
-  }, [monthlyPerformanceData]);
-
-  // Get current month data with error handling
+  // Get current month data
   const currentMonthData = useMemo(() => {
-    try {
-      if (!monthlyPerformanceData || monthlyPerformanceData.length === 0) {
-        return null;
-      }
-      return monthlyPerformanceData.find(m => m.monthKey === selectedMonth) || monthlyPerformanceData[0];
-    } catch (error) {
-      console.error('Error getting current month data:', error);
-      return null;
-    }
-  }, [selectedMonth, monthlyPerformanceData]);
+    return getDataByMonth(selectedMonth) || getLatestMonth();
+  }, [selectedMonth]);
 
-  // Get annual summary with error handling
-  const annualSummary = useMemo(() => {
-    try {
-      return getAnnualSummary() || {};
-    } catch (error) {
-      console.error('Error getting annual summary:', error);
-      return {};
-    }
+  // Get available months for selector
+  const availableMonths = useMemo(() => {
+    return enhancedMonthlyData.map(month => ({
+      value: month.monthKey,
+      label: month.monthName
+    }));
   }, []);
 
-  // Prepare chart data for monthly trends with error handling
-  const monthlyTrendData = useMemo(() => {
-    try {
-      console.log('=== MONTHLY TREND DATA PROCESSING ===');
-      console.log('monthlyPerformanceData for trends:', monthlyPerformanceData);
-      if (!monthlyPerformanceData || monthlyPerformanceData.length === 0) {
-        console.log('No data for monthly trends');
-        return [];
-      }
-      const trends = monthlyPerformanceData.map(month => ({
-        month: month.month ? month.month.split(' ')[0] : 'Unknown',
-        treated: month.totalTreatedWater || 0,
-        tse: month.totalTSEWater || 0,
-        processed: month.totalProcessedWater || 0,
-        efficiency: month.treatmentEfficiency || 0,
-        benefit: month.totalFinancialBenefit || 0,
-        tankers: month.totalTankers || 0,
-        capacityUtilization: month.avgDailyTSE ? (month.avgDailyTSE / STP_DESIGN_CAPACITY) * 100 : 0
-      }));
-      console.log('Monthly trend data result:', trends);
-      return trends;
-    } catch (error) {
-      console.error('Error processing monthly trend data:', error);
-      return [];
-    }
-  }, [monthlyPerformanceData]);
-
-  // STP Key Performance Metrics with error handling
+  // Enhanced metrics for cards - using water module style
   const stpMetrics = useMemo(() => {
     if (!currentMonthData) return [];
     
-    try {
-      return [
-        {
-          title: 'Total Water Treated',
-          value: (currentMonthData.totalTreatedWater || 0).toLocaleString(),
-          unit: 'm³',
-          subtitle: `Avg: ${currentMonthData.avgDailyTreated || 0} m³/day | ${currentMonthData.operatingDays || 0} operating days`,
-          icon: Droplets,
-          iconColor: 'text-blue-500',
-          trend: (currentMonthData.treatmentEfficiency || 0) > 110 ? 'up' : 'stable'
-        },
-        {
-          title: 'TSE Water Output',
-          value: (currentMonthData.totalTSEWater || 0).toLocaleString(),
-          unit: 'm³',
-          subtitle: `Avg: ${currentMonthData.avgDailyTSE || 0} m³/day | Capacity: ${(((currentMonthData.avgDailyTSE || 0) / STP_DESIGN_CAPACITY) * 100).toFixed(1)}%`,
-          icon: CheckCircle,
-          iconColor: 'text-green-500',
-          trend: (currentMonthData.avgDailyTSE || 0) > 500 ? 'up' : 'down'
-        },
-        {
-          title: 'Treatment Efficiency',
-          value: (currentMonthData.treatmentEfficiency || 0).toFixed(1),
-          unit: '%',
-          subtitle: 'TSE/Treated Water Ratio',
-          icon: TrendingUp,
-          iconColor: 'text-emerald-500',
-          trend: (currentMonthData.treatmentEfficiency || 0) > 110 ? 'up' : 'stable'
-        },
-        {
-          title: 'Financial Benefit',
-          value: (currentMonthData.totalFinancialBenefit || 0).toLocaleString(),
-          unit: 'OMR',
-          subtitle: `Tanker: ${(currentMonthData.tankerIncome || 0).toLocaleString()} + TSE: ${(currentMonthData.tseWaterSavings || 0).toLocaleString()}`,
-          icon: DollarSign,
-          iconColor: 'text-amber-500',
-          trend: (currentMonthData.totalFinancialBenefit || 0) > 20000 ? 'up' : 'down'
-        },
-        {
-          title: 'Tanker Operations',
-          value: (currentMonthData.totalTankers || 0).toLocaleString(),
-          unit: 'trips',
-          subtitle: `Avg: ${(currentMonthData.avgDailyTankers || 0).toFixed(1)} trips/day`,
-          icon: Trash2,
-          iconColor: 'text-purple-500',
-          trend: (currentMonthData.avgDailyTankers || 0) > 8 ? 'up' : 'down'
-        },
-        {
-          title: 'Capacity Utilization',
-          value: (((currentMonthData.avgDailyTSE || 0) / STP_DESIGN_CAPACITY) * 100).toFixed(1),
-          unit: '%',
-          subtitle: `Design Capacity: ${STP_DESIGN_CAPACITY} m³/day`,
-          icon: Gauge,
-          iconColor: 'text-indigo-500',
-          trend: (currentMonthData.avgDailyTSE || 0) > 500 ? 'up' : 'stable'
-        }
-      ];
-    } catch (error) {
-      console.error('Error processing STP metrics:', error);
-      return [];
-    }
+    return [
+      {
+        title: 'Water Treatment Capacity',
+        value: currentMonthData.capacityUtilization.toFixed(1),
+        unit: '%',
+        subtitle: `${currentMonthData.avgDailyTSE.toFixed(0)} m³/day | Design: ${STP_DESIGN_CAPACITY} m³/day`,
+        icon: Gauge,
+        iconColor: currentMonthData.capacityUtilization > 80 ? 'text-red-500' : currentMonthData.capacityUtilization > 60 ? 'text-yellow-500' : 'text-green-500'
+      },
+      {
+        title: 'Treatment Efficiency',
+        value: currentMonthData.treatmentEfficiency.toFixed(1),
+        unit: '%',
+        subtitle: `TSE Output: ${currentMonthData.totalTSEOutput.toLocaleString()} m³`,
+        icon: CheckCircle,
+        iconColor: currentMonthData.treatmentEfficiency > 85 ? 'text-green-500' : currentMonthData.treatmentEfficiency > 80 ? 'text-yellow-500' : 'text-red-500'
+      },
+      {
+        title: 'Financial Performance',
+        value: (currentMonthData.totalFinancialBenefit / 1000).toFixed(1),
+        unit: 'K OMR',
+        subtitle: `Tanker: ${currentMonthData.tankerIncome.toLocaleString()} | TSE: ${currentMonthData.tseWaterSavings.toLocaleString()}`,
+        icon: DollarSign,
+        iconColor: 'text-amber-500'
+      },
+      {
+        title: 'Total Sewage Processed',
+        value: currentMonthData.totalInletSewage.toLocaleString(),
+        unit: 'm³',
+        subtitle: `Avg: ${currentMonthData.avgDailyTreated.toFixed(0)} m³/day | ${currentMonthData.operatingDays} operating days`,
+        icon: Droplets,
+        iconColor: 'text-blue-600'
+      },
+      {
+        title: 'TSE Water Generated',
+        value: currentMonthData.totalTSEOutput.toLocaleString(),
+        unit: 'm³',
+        subtitle: `Avg: ${currentMonthData.avgDailyTSE.toFixed(0)} m³/day | ${((currentMonthData.avgDailyTSE / STP_DESIGN_CAPACITY) * 100).toFixed(1)}% capacity`,
+        icon: Waves,
+        iconColor: 'text-green-600'
+      },
+      {
+        title: 'Tanker Discharging',
+        value: currentMonthData.totalTankers.toLocaleString(),
+        unit: 'trips',
+        subtitle: `Avg: ${currentMonthData.avgDailyTankers.toFixed(1)} trips/day | Revenue: ${currentMonthData.tankerIncome.toLocaleString()} OMR`,
+        icon: Trash2,
+        iconColor: 'text-purple-600'
+      }
+    ];
   }, [currentMonthData]);
 
-  // Financial breakdown for pie chart with error handling
-  const financialBreakdown = useMemo(() => {
-    console.log('=== FINANCIAL BREAKDOWN PROCESSING ===');
-    console.log('currentMonthData for financial:', currentMonthData);
-    if (!currentMonthData) {
-      console.log('No current month data for financial breakdown');
-      return [];
+  // Equipment status summary
+  const equipmentStatus = useMemo(() => {
+    return Object.entries(equipmentMetrics).map(([key, equipment]) => ({
+      id: key,
+      name: equipment.name,
+      efficiency: equipment.efficiency,
+      status: equipment.status,
+      alerts: equipment.alerts,
+      trend: equipment.performanceTrend,
+      nextMaintenance: equipment.nextMaintenance,
+      statusColor: equipment.status === 'Excellent' ? 'text-green-500' : 
+                   equipment.status === 'Operational' ? 'text-blue-500' : 'text-yellow-500'
+    }));
+  }, []);
+
+  // Chart data preparation
+  const chartData = useMemo(() => {
+    const trends = getEfficiencyTrends();
+    return {
+      monthlyTrends: trends,
+      capacityTrend: trends.map(t => ({
+        month: t.month,
+        capacity: t.capacity,
+        efficiency: t.efficiency,
+        target: 75 // Target capacity utilization
+      })),
+      financialTrend: trends.map(t => ({
+        month: t.month,
+        financial: t.financial / 1000, // Convert to thousands
+        tankerIncome: enhancedMonthlyData.find(m => m.monthKey === t.monthKey)?.tankerIncome / 1000 || 0,
+        tseIncome: enhancedMonthlyData.find(m => m.monthKey === t.monthKey)?.tseWaterSavings / 1000 || 0
+      }))
+    };
+  }, []);
+
+  // Daily analytics for selected month
+  const dailyAnalytics = useMemo(() => {
+    return getDailyAnalytics(selectedMonth);
+  }, [selectedMonth]);
+
+  const getTrendIcon = (trend) => {
+    switch(trend) {
+      case 'up': return <ArrowUp className="h-4 w-4 text-green-500" />;
+      case 'down': return <ArrowDown className="h-4 w-4 text-red-500" />;
+      default: return <Minus className="h-4 w-4 text-gray-500" />;
     }
-    
-    try {
-      const breakdown = [
-        { name: 'TSE Water Savings', value: currentMonthData.tseWaterSavings || 0, color: '#10b981' },
-        { name: 'Tanker Revenue', value: currentMonthData.tankerIncome || 0, color: '#f59e0b' }
-      ];
-      console.log('Financial breakdown result:', breakdown);
-      return breakdown;
-    } catch (error) {
-      console.error('Error processing financial breakdown:', error);
-      return [];
-    }
-  }, [currentMonthData]);
+  };
 
-  // Enhanced data for interactive charts with error handling
-  const enhancedMonthlyData = useMemo(() => {
-    try {
-      console.log('=== ENHANCED MONTHLY DATA PROCESSING ===');
-      console.log('monthlyPerformanceData in enhanced:', monthlyPerformanceData);
-      if (!monthlyPerformanceData || monthlyPerformanceData.length === 0) {
-        console.log('No monthly performance data for enhanced processing');
-        return [];
-      }
-      
-      const enhanced = monthlyPerformanceData.map(month => {
-        // Calculate estimated tanker volume (assuming 20m³ per tanker trip)
-        const estimatedTankerVolume = (month.totalTankers || 0) * 20;
-        // Calculate direct sewage as the difference
-        const directSewageVolume = (month.totalProcessedWater || 0) - estimatedTankerVolume;
-        
-        return {
-          month: month.month || 'Unknown',
-          monthShort: month.month ? month.month.split(' ')[0] : 'Unknown',
-          monthKey: month.monthKey || '',
-          totalProcessedWater: month.totalProcessedWater || 0,
-          totalTSEWater: month.totalTSEWater || 0,
-          totalTreatedWater: month.totalTreatedWater || 0,
-          tankerVolume: estimatedTankerVolume,
-          directSewageVolume: Math.max(0, directSewageVolume),
-          tankerPercentage: month.totalProcessedWater ? ((estimatedTankerVolume / month.totalProcessedWater) * 100).toFixed(1) : '0',
-          directSewagePercentage: month.totalProcessedWater ? ((directSewageVolume / month.totalProcessedWater) * 100).toFixed(1) : '0',
-          treatmentEfficiency: month.treatmentEfficiency || 0,
-          operatingDays: month.operatingDays || 0,
-          avgDailyProcessed: month.avgDailyProcessed || 0,
-          avgDailyTSE: month.avgDailyTSE || 0
-        };
-      });
-      
-      console.log('Enhanced monthly data result:', enhanced);
-      return enhanced;
-    } catch (error) {
-      console.error('Error processing enhanced monthly data:', error);
-      return [];
-    }
-  }, [monthlyPerformanceData]);
-
-  // Filtered data for selected months range
-  const [monthRange, setMonthRange] = useState({ start: 0, end: 2 });
-  
-  const filteredChartData = useMemo(() => {
-    try {
-      if (!enhancedMonthlyData || enhancedMonthlyData.length === 0) {
-        return [];
-      }
-      return enhancedMonthlyData.slice(monthRange.start, monthRange.end + 1);
-    } catch (error) {
-      console.error('Error filtering chart data:', error);
-      return [];
-    }
-  }, [enhancedMonthlyData, monthRange]);
-
-  // Update month range when data changes
-  React.useEffect(() => {
-    setMonthRange({ start: 0, end: Math.max(0, enhancedMonthlyData.length - 1) });
-  }, [enhancedMonthlyData.length]);
-
-  // Define tabs for navigation with updated structure for SubNavigation
-  const subSections = [
-    { id: 'dashboard', name: 'Dashboard', icon: Factory },
-    { id: 'analytics', name: 'Advanced Analytics', icon: BarChart3 },
-    { id: 'monthly', name: 'Monthly Analysis', icon: Calendar },
-    { id: 'financial', name: 'Financial Overview', icon: DollarSign },
-    { id: 'annual', name: 'Annual Summary', icon: Target }
-  ];
-
-  // Loading state
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900">Error Loading STP Data</h3>
-          <p className="text-gray-500 mt-2">{error}</p>
-          <Button onClick={() => window.location.reload()} className="mt-4">
-            Reload Page
-          </Button>
+  const renderOverview = () => (
+    <div className="space-y-6">
+      {/* Month Selector */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">STP Plant Overview</h2>
+        <div className="flex items-center space-x-4">
+          <select 
+            value={selectedMonth} 
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+          >
+            {availableMonths.map(month => (
+              <option key={month.value} value={month.value}>{month.label}</option>
+            ))}
+          </select>
         </div>
       </div>
-    );
-  }
 
-  const renderDashboard = () => (
-    <div className="space-y-6">
-      {/* Data Status Indicator */}
-      <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
-        <p className="text-sm text-green-800">
-          ✅ STP Data Loaded Successfully - {monthlyPerformanceData.length} months of data available
-        </p>
-      </div>
-
-      {/* Key Metrics Grid */}
+      {/* Enhanced Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {stpMetrics.map((metric, index) => (
           <MetricCard
@@ -354,649 +224,532 @@ const STPModule = () => {
             subtitle={metric.subtitle}
             icon={metric.icon}
             iconColor={metric.iconColor}
-            trend={metric.trend}
           />
         ))}
       </div>
 
-      {/* Performance Charts */}
+      {/* Main Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartCard title="Monthly Water Treatment Trend" className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={monthlyTrendData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis yAxisId="left" />
-              <YAxis yAxisId="right" orientation="right" />
-              <Tooltip />
-              <Bar yAxisId="left" dataKey="treated" fill="#3b82f6" name="Treated Water (m³)" />
-              <Bar yAxisId="left" dataKey="tse" fill="#10b981" name="TSE Water (m³)" />
-              <Line yAxisId="right" type="monotone" dataKey="efficiency" stroke="#f59e0b" strokeWidth={2} name="Efficiency %" />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </ChartCard>
+        {/* Monthly Performance Trend */}
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <TrendingUp className="h-5 w-5 text-blue-500" />
+              <span>Performance Trends</span>
+            </CardTitle>
+            <CardDescription>Treatment efficiency and capacity utilization over time</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={chartData.capacityTrend}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="month" stroke="#6b7280" />
+                  <YAxis stroke="#6b7280" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#ffffff', 
+                      border: '1px solid #e5e7eb', 
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    }}
+                  />
+                  <Bar dataKey="capacity" fill="#3b82f6" name="Capacity Utilization %" radius={[4, 4, 0, 0]} />
+                  <Line type="monotone" dataKey="efficiency" stroke="#10b981" strokeWidth={3} name="Treatment Efficiency %" />
+                  <Line type="monotone" dataKey="target" stroke="#f59e0b" strokeDasharray="5 5" strokeWidth={2} name="Target %" />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
 
-        <ChartCard title="Financial Benefit Distribution" className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={financialBreakdown}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {financialBreakdown.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => [`${value.toLocaleString()} OMR`, '']} />
-            </PieChart>
-          </ResponsiveContainer>
-        </ChartCard>
+        {/* Financial Performance */}
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <DollarSign className="h-5 w-5 text-amber-500" />
+              <span>Financial Performance</span>
+            </CardTitle>
+            <CardDescription>Revenue breakdown: Tanker operations vs TSE water savings</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData.financialTrend}>
+                  <defs>
+                    <linearGradient id="tankerGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.2}/>
+                    </linearGradient>
+                    <linearGradient id="tseGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.2}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="month" stroke="#6b7280" />
+                  <YAxis stroke="#6b7280" label={{ value: 'Revenue (K OMR)', angle: -90, position: 'insideLeft' }} />
+                  <Tooltip 
+                    formatter={(value, name) => [`${value.toFixed(1)}K OMR`, name]}
+                    contentStyle={{ 
+                      backgroundColor: '#ffffff', 
+                      border: '1px solid #e5e7eb', 
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="tseIncome"
+                    stackId="1"
+                    stroke="#10b981"
+                    fill="url(#tseGradient)"
+                    name="TSE Water Savings"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="tankerIncome"
+                    stackId="1"
+                    stroke="#8b5cf6"
+                    fill="url(#tankerGradient)"
+                    name="Tanker Revenue"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Equipment Status Grid */}
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Settings className="h-5 w-5 text-indigo-500" />
+            <span>Equipment Status Monitor</span>
+          </CardTitle>
+          <CardDescription>Real-time status of critical STP equipment systems</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {equipmentStatus.map((equipment) => (
+              <div key={equipment.id} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium text-gray-900 dark:text-white text-sm">{equipment.name}</h4>
+                  <div className={`w-3 h-3 rounded-full ${
+                    equipment.status === 'Excellent' ? 'bg-green-500' :
+                    equipment.status === 'Operational' ? 'bg-blue-500' : 'bg-yellow-500'
+                  }`}></div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Efficiency:</span>
+                    <span className="font-medium">{equipment.efficiency}%</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Status:</span>
+                    <span className={equipment.statusColor}>{equipment.status}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Alerts:</span>
+                    <span className={equipment.alerts > 0 ? 'text-red-500' : 'text-green-500'}>
+                      {equipment.alerts}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-400 mt-2">
+                    Next maintenance: {new Date(equipment.nextMaintenance).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderAnalytics = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Advanced Analytics</h2>
+      </div>
+
+      {/* Daily Performance Chart */}
+      {dailyAnalytics && (
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Activity className="h-5 w-5 text-blue-500" />
+              <span>Daily Performance - {dailyAnalytics.monthName}</span>
+            </CardTitle>
+            <CardDescription>Day-by-day analysis of treatment efficiency and output</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-96">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={dailyAnalytics.dailyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="day" stroke="#6b7280" />
+                  <YAxis yAxisId="volume" orientation="left" stroke="#6b7280" />
+                  <YAxis yAxisId="efficiency" orientation="right" stroke="#6b7280" />
+                  <Tooltip />
+                  <Bar yAxisId="volume" dataKey="treated" fill="#3b82f6" name="Treated Water (m³)" />
+                  <Bar yAxisId="volume" dataKey="tse" fill="#10b981" name="TSE Output (m³)" />
+                  <Line yAxisId="efficiency" type="monotone" dataKey="efficiency" stroke="#f59e0b" strokeWidth={2} name="Efficiency %" />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Performance Comparison */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle>Input Source Analysis</CardTitle>
+            <CardDescription>Breakdown of sewage input sources</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: 'Tanker Input', value: currentMonthData?.totalTankers * 20 || 0, fill: '#8b5cf6' },
+                      { name: 'Direct Sewage', value: currentMonthData?.totalDirectSewage || 0, fill: '#f59e0b' }
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    <Cell fill="#8b5cf6" />
+                    <Cell fill="#f59e0b" />
+                  </Pie>
+                  <Tooltip formatter={(value) => [`${value.toLocaleString()} m³`, '']} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle>Quality Compliance Trend</CardTitle>
+            <CardDescription>Monthly quality compliance tracking</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData.monthlyTrends}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="month" stroke="#6b7280" />
+                  <YAxis domain={[90, 100]} stroke="#6b7280" />
+                  <Tooltip />
+                  <Line 
+                    type="monotone" 
+                    dataKey="compliance" 
+                    stroke="#10b981" 
+                    strokeWidth={3}
+                    dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                    name="Quality Compliance %"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
 
-  const renderAdvancedAnalytics = () => (
+  const renderMaintenance = () => (
     <div className="space-y-6">
-      {/* Interactive Controls */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Chart Controls & Filters</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Start Month</label>
-            <select 
-              value={monthRange.start} 
-              onChange={(e) => setMonthRange(prev => ({ ...prev, start: parseInt(e.target.value) }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {enhancedMonthlyData.map((month, index) => (
-                <option key={index} value={index}>{month.month}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">End Month</label>
-            <select 
-              value={monthRange.end} 
-              onChange={(e) => setMonthRange(prev => ({ ...prev, end: parseInt(e.target.value) }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {enhancedMonthlyData.map((month, index) => (
-                <option key={index} value={index}>{month.month}</option>
-              ))}
-            </select>
-          </div>
-          <div className="flex items-end">
-            <button 
-              onClick={() => setMonthRange({ start: 0, end: enhancedMonthlyData.length - 1 })}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition-colors"
-            >
-              Reset to All Months
-            </button>
-          </div>
-        </div>
-        <div className="mt-3 text-sm text-gray-600">
-          Showing data from <span className="font-medium">{enhancedMonthlyData[monthRange.start]?.month || 'Unknown'}</span> to <span className="font-medium">{enhancedMonthlyData[monthRange.end]?.month || 'Unknown'}</span>
-        </div>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Maintenance Management</h2>
+        <Button 
+          onClick={() => setShowMaintenanceDetails(!showMaintenanceDetails)}
+          variant="outline"
+        >
+          <Wrench className="h-4 w-4 mr-2" />
+          {showMaintenanceDetails ? 'Hide Details' : 'Show Details'}
+        </Button>
       </div>
 
-      {/* Modern Line Chart: Water Processing vs TSE Generation */}
-      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-green-50">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-            <Activity className="h-5 w-5 mr-2 text-blue-600" />
-            Water Processing vs TSE Generation Trend
-          </h3>
-          <p className="text-sm text-gray-600 mt-1">Interactive analysis of water treatment efficiency over time</p>
-        </div>
-        <div className="p-6">
-          <div className="h-96">
+      {/* Maintenance Categories */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {Object.entries(maintenanceCategories).map(([key, category]) => (
+          <Card key={key} className="shadow-lg">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center space-x-2">
+                {key === 'daily' && <Clock className="h-5 w-5 text-blue-500" />}
+                {key === 'weekly' && <Calendar className="h-5 w-5 text-green-500" />}
+                {key === 'monthly' && <RotateCcw className="h-5 w-5 text-purple-500" />}
+                {key === 'emergency' && <AlertTriangle className="h-5 w-5 text-red-500" />}
+                <span>{category.name}</span>
+              </CardTitle>
+              <CardDescription>{category.frequency}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">Compliance:</span>
+                  <span className={`font-medium ${
+                    category.compliance > 95 ? 'text-green-500' : 
+                    category.compliance > 90 ? 'text-yellow-500' : 'text-red-500'
+                  }`}>
+                    {category.compliance}%
+                  </span>
+                </div>
+                {key === 'emergency' && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-500">Incidents:</span>
+                    <span className="font-medium text-orange-500">{category.incidents}</span>
+                  </div>
+                )}
+                {showMaintenanceDetails && (
+                  <div className="mt-3">
+                    <h4 className="text-sm font-medium mb-2">Activities:</h4>
+                    <ul className="text-xs space-y-1">
+                      {category.activities.map((activity, index) => (
+                        <li key={index} className="flex items-start space-x-2">
+                          <CheckSquare className="h-3 w-3 mt-0.5 text-green-500 flex-shrink-0" />
+                          <span className="text-gray-600 dark:text-gray-300">{activity}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Maintenance Calendar/Schedule */}
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Calendar className="h-5 w-5 text-blue-500" />
+            <span>Maintenance Schedule Overview</span>
+          </CardTitle>
+          <CardDescription>Upcoming maintenance activities and compliance tracking</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {Object.entries(equipmentMetrics).map(([key, equipment]) => (
+              <div key={key} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-4 h-4 rounded-full ${
+                    equipment.status === 'Excellent' ? 'bg-green-500' :
+                    equipment.status === 'Operational' ? 'bg-blue-500' : 'bg-yellow-500'
+                  }`}></div>
+                  <div>
+                    <h4 className="font-medium text-gray-900 dark:text-white">{equipment.name}</h4>
+                    <p className="text-sm text-gray-500">Last: {new Date(equipment.lastMaintenance).toLocaleDateString()}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    Next: {new Date(equipment.nextMaintenance).toLocaleDateString()}
+                  </p>
+                  <p className={`text-xs ${
+                    new Date(equipment.nextMaintenance) - new Date() < 7 * 24 * 60 * 60 * 1000 
+                      ? 'text-red-500' : 'text-green-500'
+                  }`}>
+                    {Math.ceil((new Date(equipment.nextMaintenance) - new Date()) / (24 * 60 * 60 * 1000))} days
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderReports = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Performance Reports</h2>
+      </div>
+
+      {/* Summary Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="shadow-lg bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Droplets className="h-5 w-5 text-blue-500" />
+              <span>Water Treatment</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Total Treated:</span>
+                <span className="font-bold">{(performanceMetrics.overall.totalTreatedWater / 1000).toFixed(1)}K m³</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Total TSE:</span>
+                <span className="font-bold">{(performanceMetrics.overall.totalTSEOutput / 1000).toFixed(1)}K m³</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Avg Efficiency:</span>
+                <span className="font-bold">{performanceMetrics.overall.avgEfficiency.toFixed(1)}%</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-lg bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <DollarSign className="h-5 w-5 text-green-500" />
+              <span>Financial Impact</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Total Benefit:</span>
+                <span className="font-bold">{(performanceMetrics.overall.totalFinancialBenefit / 1000).toFixed(0)}K OMR</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Monthly Avg:</span>
+                <span className="font-bold">{(performanceMetrics.overall.totalFinancialBenefit / enhancedMonthlyData.length / 1000).toFixed(1)}K OMR</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">ROI:</span>
+                <span className="font-bold text-green-600">Excellent</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-lg bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Leaf className="h-5 w-5 text-green-500" />
+              <span>Environmental</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Water Recycled:</span>
+                <span className="font-bold">{(performanceMetrics.environmental.waterRecycled / 1000).toFixed(0)}K m³</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Waste Processed:</span>
+                <span className="font-bold">{(performanceMetrics.environmental.wasteReduced / 1000).toFixed(0)}K m³</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Sustainability:</span>
+                <span className="font-bold text-green-600">{performanceMetrics.environmental.sustainabilityScore}%</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Annual Forecast */}
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Target className="h-5 w-5 text-purple-500" />
+            <span>12-Month Financial Forecast</span>
+          </CardTitle>
+          <CardDescription>Projected financial benefits based on current performance trends</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={filteredChartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+              <AreaChart data={getFinancialForecast(12)}>
                 <defs>
-                  <linearGradient id="processedGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
-                  </linearGradient>
-                  <linearGradient id="tseGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
+                  <linearGradient id="forecastGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.2}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis 
-                  dataKey="monthShort" 
-                  tick={{ fontSize: 12 }}
-                  stroke="#6b7280"
-                  angle={-45}
-                  textAnchor="end"
-                  height={60}
+                <XAxis dataKey="month" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" label={{ value: 'Revenue (OMR)', angle: -90, position: 'insideLeft' }} />
+                <Tooltip formatter={(value) => [`${value.toLocaleString()} OMR`, '']} />
+                <Area
+                  type="monotone"
+                  dataKey="projected"
+                  stroke="#8b5cf6"
+                  fill="url(#forecastGradient)"
+                  name="Projected Monthly Benefit"
                 />
-                <YAxis 
-                  tick={{ fontSize: 12 }}
-                  stroke="#6b7280"
-                  label={{ value: 'Volume (m³)', angle: -90, position: 'insideLeft' }}
-                />
-                <Tooltip 
-                  contentStyle={{
-                    backgroundColor: '#ffffff',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                  }}
-                  formatter={(value, name) => [
-                    `${value.toLocaleString()} m³`,
-                    name === 'totalProcessedWater' ? 'Total Processed Water' : 'Total TSE Water Generated'
-                  ]}
-                  labelFormatter={(label) => `Month: ${label}`}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="totalProcessedWater" 
-                  stackId="1"
-                  stroke="#3b82f6" 
+                <Line
+                  type="monotone"
+                  dataKey="cumulative"
+                  stroke="#f59e0b"
                   strokeWidth={2}
-                  fill="url(#processedGradient)"
-                  dot={{ fill: '#3b82f6', strokeWidth: 2, r: 3 }}
-                  activeDot={{ r: 5, stroke: '#3b82f6', strokeWidth: 2 }}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="totalTSEWater" 
-                  stackId="2"
-                  stroke="#10b981" 
-                  strokeWidth={2}
-                  fill="url(#tseGradient)"
-                  dot={{ fill: '#10b981', strokeWidth: 2, r: 3 }}
-                  activeDot={{ r: 5, stroke: '#10b981', strokeWidth: 2 }}
+                  strokeDasharray="5 5"
+                  name="Cumulative Benefit"
                 />
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          
-          {/* Summary Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6 pt-6 border-t">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {filteredChartData && filteredChartData.length > 0 
-                  ? filteredChartData.reduce((sum, item) => sum + (item.totalProcessedWater || 0), 0).toLocaleString()
-                  : '0'
-                }
-              </div>
-              <div className="text-sm text-gray-500">Total Processed (m³)</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
-                {filteredChartData && filteredChartData.length > 0 
-                  ? filteredChartData.reduce((sum, item) => sum + (item.totalTSEWater || 0), 0).toLocaleString()
-                  : '0'
-                }
-              </div>
-              <div className="text-sm text-gray-500">Total TSE Generated (m³)</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">
-                {filteredChartData && filteredChartData.length > 0 
-                  ? (filteredChartData.reduce((sum, item) => sum + (item.treatmentEfficiency || 0), 0) / filteredChartData.length).toFixed(1)
-                  : '0.0'
-                }%
-              </div>
-              <div className="text-sm text-gray-500">Average Efficiency</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-amber-600">
-                {filteredChartData && filteredChartData.length > 0 
-                  ? filteredChartData.reduce((sum, item) => sum + (item.operatingDays || 0), 0)
-                  : '0'
-                }
-              </div>
-              <div className="text-sm text-gray-500">Total Operating Days</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Input Sources Analysis Chart */}
-      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <div className="px-6 py-4 border-b bg-gradient-to-r from-purple-50 to-amber-50">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-            <BarChart3 className="h-5 w-5 mr-2 text-purple-600" />
-            Input Sources Analysis: Tanker vs Direct Sewage
-          </h3>
-          <p className="text-sm text-gray-600 mt-1">Breakdown of water input sources by volume and percentage</p>
-        </div>
-        <div className="p-6">
-          <div className="h-96">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
-                <defs>
-                  <pattern id="tankerPattern" patternUnits="userSpaceOnUse" width="4" height="4">
-                    <rect width="4" height="4" fill="#8b5cf6" opacity="0.1"/>
-                    <path d="M 0,4 l 4,-4 M -1,1 l 2,-2 M 3,5 l 2,-2" stroke="#8b5cf6" strokeWidth="1"/>
-                  </pattern>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis 
-                  dataKey="monthShort" 
-                  tick={{ fontSize: 12 }}
-                  stroke="#6b7280"
-                  angle={-45}
-                  textAnchor="end"
-                  height={60}
-                />
-                <YAxis 
-                  yAxisId="volume"
-                  orientation="left"
-                  tick={{ fontSize: 12 }}
-                  stroke="#6b7280"
-                  label={{ value: 'Volume (m³)', angle: -90, position: 'insideLeft' }}
-                />
-                <YAxis 
-                  yAxisId="percentage"
-                  orientation="right"
-                  tick={{ fontSize: 12 }}
-                  stroke="#6b7280"
-                  label={{ value: 'Percentage (%)', angle: 90, position: 'insideRight' }}
-                />
-                <Tooltip 
-                  contentStyle={{
-                    backgroundColor: '#ffffff',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                  }}
-                  formatter={(value, name, props) => {
-                    if (name.includes('Percentage')) {
-                      return [`${value}%`, name];
-                    }
-                    return [`${value.toLocaleString()} m³`, name];
-                  }}
-                  labelFormatter={(label) => `Month: ${label}`}
-                />
-                <Bar 
-                  yAxisId="volume"
-                  dataKey="tankerVolume" 
-                  name="Tanker Volume"
-                  fill="#8b5cf6"
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar 
-                  yAxisId="volume"
-                  dataKey="directSewageVolume" 
-                  name="Direct Sewage Volume"
-                  fill="#f59e0b"
-                  radius={[4, 4, 0, 0]}
-                />
-                <Line 
-                  yAxisId="percentage"
-                  type="monotone" 
-                  dataKey="tankerPercentage" 
-                  name="Tanker Percentage"
-                  stroke="#7c3aed" 
-                  strokeWidth={3}
-                  dot={{ fill: '#7c3aed', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6, stroke: '#7c3aed', strokeWidth: 2 }}
-                />
-                <Line 
-                  yAxisId="percentage"
-                  type="monotone" 
-                  dataKey="directSewagePercentage" 
-                  name="Direct Sewage Percentage"
-                  stroke="#d97706" 
-                  strokeWidth={3}
-                  strokeDasharray="5 5"
-                  dot={{ fill: '#d97706', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6, stroke: '#d97706', strokeWidth: 2 }}
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Input Sources Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 pt-6 border-t">
-            <div className="bg-purple-50 rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-sm font-medium text-purple-800">Tanker Input</h4>
-                  <div className="text-2xl font-bold text-purple-600 mt-1">
-                    {filteredChartData && filteredChartData.length > 0 
-                      ? filteredChartData.reduce((sum, item) => sum + (item.tankerVolume || 0), 0).toLocaleString()
-                      : '0'
-                    } m³
-                  </div>
-                  <div className="text-sm text-purple-600 mt-1">
-                    Avg: {filteredChartData && filteredChartData.length > 0 
-                      ? (filteredChartData.reduce((sum, item) => sum + parseFloat(item.tankerPercentage || 0), 0) / filteredChartData.length).toFixed(1)
-                      : '0.0'
-                    }%
-                  </div>
-                </div>
-                <Trash2 className="h-8 w-8 text-purple-500" />
-              </div>
-            </div>
-            
-            <div className="bg-amber-50 rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-sm font-medium text-amber-800">Direct Sewage</h4>
-                  <div className="text-2xl font-bold text-amber-600 mt-1">
-                    {filteredChartData && filteredChartData.length > 0 
-                      ? filteredChartData.reduce((sum, item) => sum + (item.directSewageVolume || 0), 0).toLocaleString()
-                      : '0'
-                    } m³
-                  </div>
-                  <div className="text-sm text-amber-600 mt-1">
-                    Avg: {filteredChartData && filteredChartData.length > 0 
-                      ? (filteredChartData.reduce((sum, item) => sum + parseFloat(item.directSewagePercentage || 0), 0) / filteredChartData.length).toFixed(1)
-                      : '0.0'
-                    }%
-                  </div>
-                </div>
-                <Factory className="h-8 w-8 text-amber-500" />
-              </div>
-            </div>
-            
-            <div className="bg-blue-50 rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-sm font-medium text-blue-800">Total Input</h4>
-                  <div className="text-2xl font-bold text-blue-600 mt-1">
-                    {filteredChartData && filteredChartData.length > 0 
-                      ? filteredChartData.reduce((sum, item) => sum + (item.totalProcessedWater || 0), 0).toLocaleString()
-                      : '0'
-                    } m³
-                  </div>
-                  <div className="text-sm text-blue-600 mt-1">
-                    {filteredChartData ? filteredChartData.length : 0} months selected
-                  </div>
-                </div>
-                <Droplets className="h-8 w-8 text-blue-500" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderMonthlyAnalysis = () => (
-    <div className="space-y-6">
-      {/* Monthly Performance Table */}
-      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <div className="px-4 py-3 border-b bg-gray-50">
-          <h3 className="text-lg font-semibold text-gray-900">Monthly Performance Summary</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Month</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Operating Days</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Processed (m³)</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Treated (m³)</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TSE (m³)</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Efficiency (%)</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tankers</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Financial Benefit (OMR)</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {monthlyPerformanceData && monthlyPerformanceData.length > 0 ? (
-                monthlyPerformanceData.map((month, index) => (
-                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{month.month || 'Unknown'}</td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{month.operatingDays || 0}</td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{(month.totalProcessedWater || 0).toLocaleString()}</td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{(month.totalTreatedWater || 0).toLocaleString()}</td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{(month.totalTSEWater || 0).toLocaleString()}</td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        (month.treatmentEfficiency || 0) > 110 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {(month.treatmentEfficiency || 0).toFixed(1)}%
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{month.totalTankers || 0}</td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
-                      {(month.totalFinancialBenefit || 0).toLocaleString()}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="8" className="px-4 py-8 text-center text-gray-500">
-                    No data available
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Capacity Utilization Chart */}
-      <ChartCard title="Monthly Capacity Utilization vs Design Capacity" className="h-80">
-        {monthlyTrendData && monthlyTrendData.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={monthlyTrendData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis domain={[0, 'dataMax + 10']} />
-              <Tooltip 
-                formatter={(value) => [`${value.toFixed(1)}%`, 'Capacity Utilization']}
-                labelFormatter={(label) => `Month: ${label}`}
-              />
-              <Bar 
-                dataKey="capacityUtilization" 
-                fill="#6366f1" 
-                name="Capacity Utilization %" 
-                radius={[4, 4, 0, 0]}
-              />
-              {/* Reference line indicator for 100% capacity */}
-            </BarChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-              <p className="text-gray-500">No chart data available</p>
-            </div>
-          </div>
-        )}
-      </ChartCard>
-    </div>
-  );
-
-  const renderFinancialOverview = () => (
-    <div className="space-y-6">
-      {/* Financial Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <DollarSign className="h-8 w-8 text-green-500" />
-            </div>
-            <div className="ml-5 w-0 flex-1">
-              <dl>
-                <dt className="text-sm font-medium text-gray-500 truncate">Total Financial Benefit</dt>
-                <dd className="text-2xl font-bold text-gray-900">{financialAnalysisSummary.totalFinancialBenefit.total.toLocaleString()} OMR</dd>
-                <dd className="text-sm text-gray-500">Monthly Avg: {financialAnalysisSummary.totalFinancialBenefit.monthlyAverage.toLocaleString()} OMR</dd>
-              </dl>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <Droplets className="h-8 w-8 text-blue-500" />
-            </div>
-            <div className="ml-5 w-0 flex-1">
-              <dl>
-                <dt className="text-sm font-medium text-gray-500 truncate">TSE Water Savings</dt>
-                <dd className="text-2xl font-bold text-gray-900">{financialAnalysisSummary.tseWaterSavings.total.toLocaleString()} OMR</dd>
-                <dd className="text-sm text-gray-500">{financialAnalysisSummary.tseWaterSavings.percentage}% of total benefit</dd>
-              </dl>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <Trash2 className="h-8 w-8 text-purple-500" />
-            </div>
-            <div className="ml-5 w-0 flex-1">
-              <dl>
-                <dt className="text-sm font-medium text-gray-500 truncate">Tanker Revenue</dt>
-                <dd className="text-2xl font-bold text-gray-900">{financialAnalysisSummary.tankerDischargeRevenue.total.toLocaleString()} OMR</dd>
-                <dd className="text-sm text-gray-500">{financialAnalysisSummary.tankerDischargeRevenue.percentage}% of total benefit</dd>
-              </dl>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Monthly Financial Trend */}
-      <ChartCard title="Monthly Financial Benefit Trend" className="h-80">
-        <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={monthlyTrendData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
-            <YAxis />
-            <Tooltip />
-            <Area dataKey="benefit" fill="#10b981" fillOpacity={0.3} stroke="#10b981" name="Total Benefit (OMR)" />
-            <Bar dataKey="tankers" fill="#8b5cf6" name="Tanker Trips" />
-          </ComposedChart>
-        </ResponsiveContainer>
-      </ChartCard>
-    </div>
-  );
-
-  const renderAnnualSummary = () => (
-    <div className="space-y-6">
-      {/* Annual Performance Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <div className="flex items-center">
-            <Calendar className="h-8 w-8 text-blue-500" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Operating Days</p>
-              <p className="text-2xl font-bold text-gray-900">{annualSummary.totalOperatingDays}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <div className="flex items-center">
-            <Droplets className="h-8 w-8 text-green-500" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total TSE Water</p>
-              <p className="text-2xl font-bold text-gray-900">{annualSummary.totalTSEWater.toLocaleString()}</p>
-              <p className="text-xs text-gray-500">m³</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <div className="flex items-center">
-            <TrendingUp className="h-8 w-8 text-emerald-500" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Overall Efficiency</p>
-              <p className="text-2xl font-bold text-gray-900">{annualSummary.overallTreatmentEfficiency.toFixed(1)}%</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <div className="flex items-center">
-            <DollarSign className="h-8 w-8 text-amber-500" />
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Benefit</p>
-              <p className="text-2xl font-bold text-gray-900">{annualSummary.totalFinancialBenefit.toLocaleString()}</p>
-              <p className="text-xs text-gray-500">OMR</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Annual Performance Summary Table */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Annual Performance Summary</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h4 className="font-medium text-gray-700 mb-3">Water Treatment Performance</h4>
-            <dl className="space-y-2">
-              <div className="flex justify-between">
-                <dt className="text-sm text-gray-500">Total Processed Water:</dt>
-                <dd className="text-sm font-medium text-gray-900">{annualSummary.totalProcessedWater.toLocaleString()} m³</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-sm text-gray-500">Total Treated Water:</dt>
-                <dd className="text-sm font-medium text-gray-900">{annualSummary.totalTreatedWater.toLocaleString()} m³</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-sm text-gray-500">Average Daily TSE:</dt>
-                <dd className="text-sm font-medium text-gray-900">{annualSummary.avgDailyTSE.toFixed(0)} m³/day</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-sm text-gray-500">Capacity Utilization:</dt>
-                <dd className="text-sm font-medium text-gray-900">{annualSummary.capacityUtilization.toFixed(1)}%</dd>
-              </div>
-            </dl>
-          </div>
-          <div>
-            <h4 className="font-medium text-gray-700 mb-3">Financial Performance</h4>
-            <dl className="space-y-2">
-              <div className="flex justify-between">
-                <dt className="text-sm text-gray-500">Total Tanker Operations:</dt>
-                <dd className="text-sm font-medium text-gray-900">{annualSummary.totalTankers.toLocaleString()} trips</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-sm text-gray-500">Average Daily Tankers:</dt>
-                <dd className="text-sm font-medium text-gray-900">{annualSummary.avgDailyTankers.toFixed(1)} trips/day</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-sm text-gray-500">Average Monthly Benefit:</dt>
-                <dd className="text-sm font-medium text-gray-900">{annualSummary.avgMonthlyFinancialBenefit.toLocaleString()} OMR</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-sm text-gray-500">Design Capacity:</dt>
-                <dd className="text-sm font-medium text-gray-900">{STP_DESIGN_CAPACITY} m³/day</dd>
-              </div>
-            </dl>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 
   return (
-    <div className="space-y-6 p-6 bg-background-primary dark:bg-gray-900 min-h-screen transition-colors duration-300">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 transition-colors duration-300">
       {/* Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-primary dark:text-white mb-2 transition-colors duration-300">STP Plant Management System</h1>
-        <p className="text-secondary dark:text-gray-300 transition-colors duration-300">Sewage Treatment Plant Operations & Performance Monitoring</p>
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+          STP Plant Management System
+        </h1>
+        <p className="text-lg text-gray-600 dark:text-gray-300">
+          Comprehensive Sewage Treatment Plant Operations & Performance Monitoring
+        </p>
       </div>
 
-      {/* Sub Navigation */}
-      <SubNavigation 
-        sections={subSections}
-        activeSection={activeTab}
-        onSectionChange={setActiveTab}
-      />
+      {/* Enhanced Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4 bg-white dark:bg-gray-800 shadow-lg rounded-lg">
+          <TabsTrigger value="overview" className="flex items-center space-x-2">
+            <Factory className="h-4 w-4" />
+            <span>Overview</span>
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center space-x-2">
+            <BarChart3 className="h-4 w-4" />
+            <span>Analytics</span>
+          </TabsTrigger>
+          <TabsTrigger value="maintenance" className="flex items-center space-x-2">
+            <Wrench className="h-4 w-4" />
+            <span>Maintenance</span>
+          </TabsTrigger>
+          <TabsTrigger value="reports" className="flex items-center space-x-2">
+            <FileText className="h-4 w-4" />
+            <span>Reports</span>
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Tab Content */}
-      {activeTab === 'dashboard' && renderDashboard()}
-      {activeTab === 'analytics' && renderAdvancedAnalytics()}
-      {activeTab === 'monthly' && renderMonthlyAnalysis()}
-      {activeTab === 'financial' && renderFinancialOverview()}
-      {activeTab === 'annual' && renderAnnualSummary()}
+        <TabsContent value="overview" className="space-y-6">
+          {renderOverview()}
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-6">
+          {renderAnalytics()}
+        </TabsContent>
+
+        <TabsContent value="maintenance" className="space-y-6">
+          {renderMaintenance()}
+        </TabsContent>
+
+        <TabsContent value="reports" className="space-y-6">
+          {renderReports()}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
