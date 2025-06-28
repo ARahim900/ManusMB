@@ -19,6 +19,7 @@ import {
   Calendar,
   BarChart3
 } from 'lucide-react';
+import AlertCard from '@components/ui/AlertCard';
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -157,7 +158,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen space-y-6">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6 md:space-y-8">
       {/* Header Section */}
       <div className="page-header">
         <div>
@@ -183,7 +184,7 @@ const Dashboard = () => {
       </div>
 
       {/* KPI Cards Grid */}
-      <div className="metrics-grid">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {kpiCards.map((card, index) => (
           <MetricCard
             key={index}
