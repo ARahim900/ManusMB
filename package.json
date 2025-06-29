@@ -15,8 +15,8 @@
     "dom-helpers": "^6.0.1",
     "firebase": "^11.9.1",
     "lucide-react": "^0.263.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-router-dom": "^6.8.1",
     "recharts": "^2.7.2",
     "xlsx": "^0.18.5"
@@ -24,7 +24,7 @@
   "devDependencies": {
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
-    "@vitejs/plugin-react": "^4.0.3",
+    "@vitejs/plugin-react": "^4.6.0",
     "autoprefixer": "^10.4.16",
     "eslint": "^8.45.0",
     "eslint-plugin-react": "^7.32.2",
@@ -33,7 +33,7 @@
     "postcss": "^8.4.32",
     "tailwindcss": "^3.3.6",
     "terser": "^5.43.1",
-    "vite": "^4.4.5"
+    "vite": "^4.5.14"
   },
   "engines": {
     "node": ">=18.0.0",

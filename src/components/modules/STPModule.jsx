@@ -53,9 +53,7 @@ import {
   STP_DESIGN_CAPACITY
 } from '../../services/stpCleanDataService';
 
-console.log('=== STP DATA DEBUG (HARDCODED) ===');
-console.log('monthlyPerformanceData length:', monthlyPerformanceData.length);
-console.log('monthlyPerformanceData:', monthlyPerformanceData);
+// STP data imported from service
 
 const STPModule = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -65,13 +63,10 @@ const STPModule = () => {
   // Get the most recent month with data as default
   const defaultMonth = useMemo(() => {
     try {
-      console.log('Monthly performance data:', monthlyPerformanceData);
       if (!monthlyPerformanceData || monthlyPerformanceData.length === 0) {
-        console.log('No monthly performance data available');
         return '2025-06';
       }
       const sortedMonths = [...monthlyPerformanceData].sort((a, b) => new Date(b.monthKey) - new Date(a.monthKey));
-      console.log('Sorted months:', sortedMonths);
       return sortedMonths[0]?.monthKey || '2025-06';
     } catch (error) {
       console.error('Error getting default month:', error);
@@ -125,12 +120,10 @@ const STPModule = () => {
   // Prepare chart data for monthly trends with error handling
   const monthlyTrendData = useMemo(() => {
     try {
-      console.log('=== MONTHLY TREND DATA PROCESSING ===');
-      console.log('monthlyPerformanceData for trends:', monthlyPerformanceData);
       if (!monthlyPerformanceData || monthlyPerformanceData.length === 0) {
-        console.log('No data for monthly trends');
         return [];
       }
+      
       const trends = monthlyPerformanceData.map(month => ({
         month: month.month ? month.month.split(' ')[0] : 'Unknown',
         treated: month.totalTreatedWater || 0,
@@ -141,7 +134,6 @@ const STPModule = () => {
         tankers: month.totalTankers || 0,
         capacityUtilization: month.avgDailyTSE ? (month.avgDailyTSE / STP_DESIGN_CAPACITY) * 100 : 0
       }));
-      console.log('Monthly trend data result:', trends);
       return trends;
     } catch (error) {
       console.error('Error processing monthly trend data:', error);
@@ -218,10 +210,7 @@ const STPModule = () => {
 
   // Financial breakdown for pie chart with error handling
   const financialBreakdown = useMemo(() => {
-    console.log('=== FINANCIAL BREAKDOWN PROCESSING ===');
-    console.log('currentMonthData for financial:', currentMonthData);
     if (!currentMonthData) {
-      console.log('No current month data for financial breakdown');
       return [];
     }
     
@@ -230,7 +219,6 @@ const STPModule = () => {
         { name: 'TSE Water Savings', value: currentMonthData.tseWaterSavings || 0, color: '#10b981' },
         { name: 'Tanker Revenue', value: currentMonthData.tankerIncome || 0, color: '#f59e0b' }
       ];
-      console.log('Financial breakdown result:', breakdown);
       return breakdown;
     } catch (error) {
       console.error('Error processing financial breakdown:', error);
@@ -241,10 +229,7 @@ const STPModule = () => {
   // Enhanced data for interactive charts with error handling
   const enhancedMonthlyData = useMemo(() => {
     try {
-      console.log('=== ENHANCED MONTHLY DATA PROCESSING ===');
-      console.log('monthlyPerformanceData in enhanced:', monthlyPerformanceData);
       if (!monthlyPerformanceData || monthlyPerformanceData.length === 0) {
-        console.log('No monthly performance data for enhanced processing');
         return [];
       }
       
@@ -272,7 +257,6 @@ const STPModule = () => {
         };
       });
       
-      console.log('Enhanced monthly data result:', enhanced);
       return enhanced;
     } catch (error) {
       console.error('Error processing enhanced monthly data:', error);
@@ -334,13 +318,63 @@ const STPModule = () => {
     );
   }
 
-  const renderDashboard = () => (
+  const renderDashboard = () => {
+    console.log('Dashboard Render - monthlyTrendData:', monthlyTrendData);
+    console.log('Dashboard Render - financialBreakdown:', financialBreakdown);
+    console.log('Dashboard Render - currentMonthData:', currentMonthData);
+    console.log('Dashboard Render - monthlyPerformanceData:', monthlyPerformanceData);
+    
+    return (
     <div className="space-y-6">
-      {/* Data Status Indicator */}
-      <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
-        <p className="text-sm text-green-800">
-          ✅ STP Data Loaded Successfully - {monthlyPerformanceData.length} months of data available
-        </p>
+      {/* Chart Controls & Filters - Positioned under navigation bar */}
+      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+        <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-purple-50">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+            <Filter className="h-5 w-5 mr-2 text-blue-600" />
+            Chart Controls & Filters
+          </h3>
+          <p className="text-sm text-gray-600 mt-1">Filter data by month range for detailed analysis</p>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Start Month</label>
+              <select 
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                value={monthRange.start}
+                onChange={(e) => setMonthRange(prev => ({ ...prev, start: parseInt(e.target.value) }))}
+              >
+                {enhancedMonthlyData.map((month, index) => (
+                  <option key={index} value={index}>{month.month}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">End Month</label>
+              <select 
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                value={monthRange.end}
+                onChange={(e) => setMonthRange(prev => ({ ...prev, end: parseInt(e.target.value) }))}
+              >
+                {enhancedMonthlyData.map((month, index) => (
+                  <option key={index} value={index}>{month.month}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col space-y-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setMonthRange({ start: 0, end: enhancedMonthlyData.length - 1 })}
+                className="w-full"
+              >
+                Reset to All Data
+              </Button>
+              <div className="text-sm text-gray-600 text-center">
+                Showing data from <span className="font-medium">{enhancedMonthlyData[monthRange.start]?.month || 'Unknown'}</span> to <span className="font-medium">{enhancedMonthlyData[monthRange.end]?.month || 'Unknown'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Key Metrics Grid */}
@@ -362,88 +396,80 @@ const STPModule = () => {
       {/* Performance Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ChartCard title="Monthly Water Treatment Trend" className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={monthlyTrendData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis yAxisId="left" />
-              <YAxis yAxisId="right" orientation="right" />
-              <Tooltip />
-              <Bar yAxisId="left" dataKey="treated" fill="#3b82f6" name="Treated Water (m³)" />
-              <Bar yAxisId="left" dataKey="tse" fill="#10b981" name="TSE Water (m³)" />
-              <Line yAxisId="right" type="monotone" dataKey="efficiency" stroke="#f59e0b" strokeWidth={2} name="Efficiency %" />
-            </ComposedChart>
-          </ResponsiveContainer>
+          {filteredChartData && filteredChartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={filteredChartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="monthShort" />
+                <YAxis yAxisId="left" />
+                <YAxis yAxisId="right" orientation="right" />
+                <Tooltip />
+                <Bar yAxisId="left" dataKey="totalTreatedWater" fill="#3b82f6" name="Treated Water (m³)" />
+                <Bar yAxisId="left" dataKey="totalTSEWater" fill="#10b981" name="TSE Water (m³)" />
+                <Line yAxisId="right" type="monotone" dataKey="treatmentEfficiency" stroke="#f59e0b" strokeWidth={2} name="Efficiency %" />
+              </ComposedChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                <p className="text-gray-500">No trend data available</p>
+              </div>
+            </div>
+          )}
         </ChartCard>
 
         <ChartCard title="Financial Benefit Distribution" className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={financialBreakdown}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {financialBreakdown.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => [`${value.toLocaleString()} OMR`, '']} />
-            </PieChart>
-          </ResponsiveContainer>
+          {filteredChartData && filteredChartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={[
+                    { 
+                      name: 'TSE Water Savings', 
+                      value: filteredChartData.reduce((sum, item) => sum + (item.totalTSEWater * TSE_SAVING_PER_M3 || 0), 0), 
+                      color: '#10b981' 
+                    },
+                    { 
+                      name: 'Tanker Revenue', 
+                      value: filteredChartData.reduce((sum, item) => sum + (item.tankerVolume * TANKER_INCOME_PER_TRIP / 20 || 0), 0), 
+                      color: '#f59e0b' 
+                    }
+                  ]}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {[
+                    { name: 'TSE Water Savings', value: filteredChartData.reduce((sum, item) => sum + (item.totalTSEWater * TSE_SAVING_PER_M3 || 0), 0), color: '#10b981' },
+                    { name: 'Tanker Revenue', value: filteredChartData.reduce((sum, item) => sum + (item.tankerVolume * TANKER_INCOME_PER_TRIP / 20 || 0), 0), color: '#f59e0b' }
+                  ].map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => [`${value.toLocaleString()} OMR`, '']} />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                <p className="text-gray-500">No financial data available</p>
+              </div>
+            </div>
+          )}
         </ChartCard>
       </div>
     </div>
-  );
+    );
+  };
 
   const renderAdvancedAnalytics = () => (
     <div className="space-y-6">
-      {/* Interactive Controls */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Chart Controls & Filters</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Start Month</label>
-            <select 
-              value={monthRange.start} 
-              onChange={(e) => setMonthRange(prev => ({ ...prev, start: parseInt(e.target.value) }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {enhancedMonthlyData.map((month, index) => (
-                <option key={index} value={index}>{month.month}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">End Month</label>
-            <select 
-              value={monthRange.end} 
-              onChange={(e) => setMonthRange(prev => ({ ...prev, end: parseInt(e.target.value) }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {enhancedMonthlyData.map((month, index) => (
-                <option key={index} value={index}>{month.month}</option>
-              ))}
-            </select>
-          </div>
-          <div className="flex items-end">
-            <button 
-              onClick={() => setMonthRange({ start: 0, end: enhancedMonthlyData.length - 1 })}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition-colors"
-            >
-              Reset to All Months
-            </button>
-          </div>
-        </div>
-        <div className="mt-3 text-sm text-gray-600">
-          Showing data from <span className="font-medium">{enhancedMonthlyData[monthRange.start]?.month || 'Unknown'}</span> to <span className="font-medium">{enhancedMonthlyData[monthRange.end]?.month || 'Unknown'}</span>
-        </div>
-      </div>
 
       {/* Modern Line Chart: Water Processing vs TSE Generation */}
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
