@@ -5,7 +5,13 @@ import DarkModeToggle from '../ui/DarkModeToggle';
 
 const TopHeader = ({ onMenuClick, sidebarCollapsed, onToggleCollapse, isMobile }) => {
   return (
-    <header className="header flex items-center justify-between h-14 sm:h-16 px-3 sm:px-4 md:px-6 shadow-sm bg-background-secondary dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 transition-colors duration-300">
+    <header className="header fixed top-0 right-0 left-0 z-20 flex items-center justify-between h-14 sm:h-16 px-3 sm:px-4 md:px-6 shadow-sm bg-background-secondary dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 transition-all duration-300 md:ml-0"
+      style={{
+        // Adjust left margin based on sidebar state on desktop
+        marginLeft: !isMobile ? (sidebarCollapsed ? '80px' : '288px') : '0',
+        transition: 'margin-left 0.3s ease-in-out'
+      }}
+    >
       {/* Left Section */}
       <div className="flex items-center">
         {!isMobile ? (

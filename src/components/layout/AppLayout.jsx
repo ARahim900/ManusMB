@@ -102,13 +102,18 @@ const AppLayout = ({ children }) => {
         {/* Top Header */}
         <TopHeader 
           onMenuClick={() => setSidebarOpen(true)}
-          sidebarCollapsed={sidebarCollapsed}
+          sidebarCollapsed={sidebarCollapsed && !isHoveringCollapsed}
           onToggleCollapse={handleToggleCollapse}
           isMobile={isMobile}
         />
         
-        {/* Content Area */}
-        <main className="overflow-auto content-area bg-background-primary dark:bg-gray-900 transition-colors duration-300" style={{ minHeight: 'calc(100vh - 64px)' }}>
+        {/* Content Area with proper padding for fixed header */}
+        <main className="overflow-auto content-area bg-background-primary dark:bg-gray-900 transition-colors duration-300 pt-14 sm:pt-16" 
+          style={{ 
+            minHeight: '100vh',
+            paddingTop: isMobile ? '56px' : '64px' // Account for header height
+          }}
+        >
           <div className="page-container">
             <Breadcrumbs />
             {children}
