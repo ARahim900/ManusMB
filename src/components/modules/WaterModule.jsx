@@ -276,28 +276,29 @@ Total System Loss: Overall water loss calculation with efficiency metrics
 
   // Define sub-navigation sections
   const subSections = [
-    { name: 'Overview', id: 'Overview', icon: LayoutDashboard },
-    { name: 'Water Loss Analysis', id: 'WaterLoss', icon: TrendingUp },
-    { name: 'Zone Analysis', id: 'ZoneAnalysis', icon: BarChart2 },
-    { name: 'Zone Details', id: 'ZoneDetails', icon: Database },
-    { name: 'Main Database', id: 'MainDatabase', icon: Database },
-    { name: 'Overview', id: 'Overview_New', icon: CheckCircle },
+    { name: 'Overview', id: 'Overview', icon: LayoutDashboard, shortName: 'Overview' },
+    { name: 'Water Loss Analysis', id: 'WaterLoss', icon: TrendingUp, shortName: 'Loss' },
+    { name: 'Zone Analysis', id: 'ZoneAnalysis', icon: BarChart2, shortName: 'Zones' },
+    { name: 'Zone Details', id: 'ZoneDetails', icon: Database, shortName: 'Details' },
+    { name: 'Main Database', id: 'MainDatabase', icon: Database, shortName: 'Database' },
   ];
 
   return (
     <div className="space-y-6 p-6 bg-background-primary dark:bg-gray-900 min-h-screen transition-colors duration-300">
       {/* Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-primary dark:text-white mb-2 transition-colors duration-300">Muscat Bay Water Analysis System</h1>
-        <p className="text-secondary dark:text-gray-300 transition-colors duration-300">Real Hierarchical Water Distribution Monitoring & Loss Analysis</p>
+      <div className="text-center mb-6 md:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-primary dark:text-white mb-2 transition-colors duration-300">Muscat Bay Water Analysis System</h1>
+        <p className="text-sm sm:text-base text-secondary dark:text-gray-300 transition-colors duration-300">Real Hierarchical Water Distribution Monitoring & Loss Analysis</p>
       </div>
 
-      {/* Sub Navigation */}
-      <SubNavigation 
-        sections={subSections}
-        activeSection={activeWaterSubSection}
-        onSectionChange={setActiveWaterSubSection}
-      />
+      {/* Sub Navigation - with mobile scroll */}
+      <div className="overflow-x-auto -mx-6 px-6 mb-6">
+        <SubNavigation 
+          sections={subSections}
+          activeSection={activeWaterSubSection}
+          onSectionChange={setActiveWaterSubSection}
+        />
+      </div>
 
       {activeWaterSubSection === 'Overview' && (
         <>

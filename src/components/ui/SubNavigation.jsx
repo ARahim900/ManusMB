@@ -19,8 +19,8 @@ const SubNavigation = ({ sections, activeSection, onSectionChange, className = "
   }, [onSectionChange, activeSection, isChanging]);
 
   return (
-    <div className={`mb-6 print:hidden flex justify-center ${className}`}>
-      <div className="bg-white dark:bg-gray-800 shadow-md rounded-full p-1.5 inline-flex space-x-1 border border-slate-200 dark:border-gray-600 transition-colors duration-300">
+    <div className={`mb-6 print:hidden ${className}`}>
+      <div className="bg-white dark:bg-gray-800 shadow-md rounded-full p-1.5 inline-flex space-x-1 border border-slate-200 dark:border-gray-600 transition-colors duration-300 min-w-max">
         {sections.map((section) => {
           const isActive = activeSection === section.id;
           return ( 
@@ -28,17 +28,18 @@ const SubNavigation = ({ sections, activeSection, onSectionChange, className = "
               key={section.id} 
               onClick={() => handleSectionChange(section.id)}
               disabled={isChanging}
-              className={`px-4 py-2 rounded-full text-sm font-medium flex items-center space-x-2 transition-all duration-200 ease-in-out transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium flex items-center space-x-1 sm:space-x-2 transition-all duration-200 ease-in-out transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap ${
                 isActive 
                   ? 'bg-primary text-white dark:bg-blue-600' 
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
               }`}
             > 
               <section.icon 
-                size={18} 
-                className={`${isActive ? 'text-white' : 'text-primary dark:text-blue-400'} ${isChanging ? 'animate-pulse' : ''}`}
+                size={16} 
+                className={`${isActive ? 'text-white' : 'text-primary dark:text-blue-400'} ${isChanging ? 'animate-pulse' : ''} flex-shrink-0`}
               /> 
-              <span>{section.name}</span> 
+              <span className="hidden sm:inline">{section.name}</span>
+              <span className="sm:hidden">{section.shortName || section.name}</span>
             </button> 
           );
         })}
