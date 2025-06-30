@@ -4,7 +4,7 @@ import MetricCard from '../ui/MetricCard';
 import DetailedCard from '../ui/DetailedCard';
 import ChartCard from '../ui/ChartCard';
 import AlertCard from '../ui/AlertCard';
-import Button from '../ui/button';
+import { Button } from '../ui/button';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import { 
   Zap, 

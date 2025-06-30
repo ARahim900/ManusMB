@@ -11,6 +11,7 @@
     "postinstall": "echo 'Dependencies installed successfully'"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.32.2",
     "@tailwindcss/postcss": "^4.1.11",
     "dom-helpers": "^6.0.1",
     "firebase": "^11.9.1",
