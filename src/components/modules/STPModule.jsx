@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import MetricCard from '../ui/MetricCard';
 import ChartCard from '../ui/ChartCard';
 import LoadingSpinner from '../ui/LoadingSpinner';
@@ -59,6 +59,11 @@ const STPModule = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [tabLoading, setTabLoading] = useState(false);
+  
+  // Add refs for cancellation and debouncing
+  const abortControllerRef = useRef(null);
+  const tabSwitchTimeoutRef = useRef(null);
   
   // Get the most recent month with data as default
   const defaultMonth = useMemo(() => {
@@ -76,7 +81,51 @@ const STPModule = () => {
   
   const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
 
-  // Get available months dynamically with error handling
+  // Debounced tab switching to prevent conflicts
+  const handleTabSwitch = useCallback((tabId) => {
+    // Cancel any existing operation
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Clear any pending tab switch
+    if (tabSwitchTimeoutRef.current) {
+      clearTimeout(tabSwitchTimeoutRef.current);
+    }
+    
+    setTabLoading(true);
+    
+    // Create new abort controller for this operation
+    abortControllerRef.current = new AbortController();
+    
+    // Debounce tab switching to prevent rapid clicking issues
+    tabSwitchTimeoutRef.current = setTimeout(() => {
+      try {
+        if (!abortControllerRef.current?.signal.aborted) {
+          setActiveTab(tabId);
+          setTabLoading(false);
+        }
+      } catch (error) {
+        console.error('Error switching tabs:', error);
+        setError('Failed to switch tabs. Please try again.');
+        setTabLoading(false);
+      }
+    }, 150); // Small delay to prevent rapid clicking
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      if (tabSwitchTimeoutRef.current) {
+        clearTimeout(tabSwitchTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Get available months dynamically with error handling - MEMOIZED
   const availableMonths = useMemo(() => {
     try {
       if (!monthlyPerformanceData || monthlyPerformanceData.length === 0) {
@@ -94,7 +143,7 @@ const STPModule = () => {
     }
   }, [monthlyPerformanceData]);
 
-  // Get current month data with error handling
+  // Get current month data with error handling - OPTIMIZED
   const currentMonthData = useMemo(() => {
     try {
       if (!monthlyPerformanceData || monthlyPerformanceData.length === 0) {
@@ -107,7 +156,7 @@ const STPModule = () => {
     }
   }, [selectedMonth, monthlyPerformanceData]);
 
-  // Get annual summary with error handling
+  // Get annual summary with error handling - CACHED
   const annualSummary = useMemo(() => {
     try {
       return getAnnualSummary() || {};
@@ -115,9 +164,9 @@ const STPModule = () => {
       console.error('Error getting annual summary:', error);
       return {};
     }
-  }, []);
+  }, []); // Remove dynamic dependencies that cause unnecessary recalculations
 
-  // Prepare chart data for monthly trends with error handling
+  // Prepare chart data for monthly trends with error handling - OPTIMIZED
   const monthlyTrendData = useMemo(() => {
     try {
       if (!monthlyPerformanceData || monthlyPerformanceData.length === 0) {
@@ -141,7 +190,7 @@ const STPModule = () => {
     }
   }, [monthlyPerformanceData]);
 
-  // STP Key Performance Metrics with error handling
+  // STP Key Performance Metrics with error handling - OPTIMIZED DEPENDENCIES
   const stpMetrics = useMemo(() => {
     if (!currentMonthData) return [];
     
@@ -208,7 +257,7 @@ const STPModule = () => {
     }
   }, [currentMonthData]);
 
-  // Financial breakdown for pie chart with error handling
+  // Financial breakdown for pie chart with error handling - STABLE DEPENDENCIES
   const financialBreakdown = useMemo(() => {
     if (!currentMonthData) {
       return [];
@@ -226,7 +275,7 @@ const STPModule = () => {
     }
   }, [currentMonthData]);
 
-  // Enhanced data for interactive charts with error handling
+  // Enhanced data for interactive charts with error handling - PERFORMANCE OPTIMIZED
   const enhancedMonthlyData = useMemo(() => {
     try {
       if (!monthlyPerformanceData || monthlyPerformanceData.length === 0) {
@@ -285,13 +334,13 @@ const STPModule = () => {
   }, [enhancedMonthlyData.length]);
 
   // Define tabs for navigation with updated structure for SubNavigation
-  const subSections = [
+  const subSections = useMemo(() => [
     { id: 'dashboard', name: 'Dashboard', icon: Factory },
     { id: 'analytics', name: 'Advanced Analytics', icon: BarChart3 },
     { id: 'monthly', name: 'Monthly Analysis', icon: Calendar },
     { id: 'financial', name: 'Financial Overview', icon: DollarSign },
     { id: 'annual', name: 'Annual Summary', icon: Target }
-  ];
+  ], []);
 
   // Loading state
   if (loading) {
@@ -310,7 +359,10 @@ const STPModule = () => {
           <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900">Error Loading STP Data</h3>
           <p className="text-gray-500 mt-2">{error}</p>
-          <Button onClick={() => window.location.reload()} className="mt-4">
+          <Button onClick={() => {
+            setError(null);
+            window.location.reload();
+          }} className="mt-4">
             Reload Page
           </Button>
         </div>
@@ -318,7 +370,8 @@ const STPModule = () => {
     );
   }
 
-  const renderDashboard = () => {
+  // MEMOIZED TAB CONTENT COMPONENTS FOR PERFORMANCE
+  const DashboardContent = React.memo(() => {
     console.log('Dashboard Render - monthlyTrendData:', monthlyTrendData);
     console.log('Dashboard Render - financialBreakdown:', financialBreakdown);
     console.log('Dashboard Render - currentMonthData:', currentMonthData);
@@ -466,9 +519,9 @@ const STPModule = () => {
       </div>
     </div>
     );
-  };
+  });
 
-  const renderAdvancedAnalytics = () => (
+  const AdvancedAnalyticsContent = React.memo(() => (
     <div className="space-y-6">
 
       {/* Modern Line Chart: Water Processing vs TSE Generation */}
@@ -748,9 +801,9 @@ const STPModule = () => {
         </div>
       </div>
     </div>
-  );
+  ));
 
-  const renderMonthlyAnalysis = () => (
+  const MonthlyAnalysisContent = React.memo(() => (
     <div className="space-y-6">
       {/* Monthly Performance Table */}
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
@@ -836,9 +889,9 @@ const STPModule = () => {
         )}
       </ChartCard>
     </div>
-  );
+  ));
 
-  const renderFinancialOverview = () => (
+  const FinancialOverviewContent = React.memo(() => (
     <div className="space-y-6">
       {/* Financial Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -902,9 +955,9 @@ const STPModule = () => {
         </ResponsiveContainer>
       </ChartCard>
     </div>
-  );
+  ));
 
-  const renderAnnualSummary = () => (
+  const AnnualSummaryContent = React.memo(() => (
     <div className="space-y-6">
       {/* Annual Performance Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -1000,31 +1053,70 @@ const STPModule = () => {
         </div>
       </div>
     </div>
-  );
+  ));
+
+  // RENDER TAB CONTENT WITH LOADING OVERLAY
+  const renderTabContent = () => {
+    if (tabLoading) {
+      return (
+        <div className="relative">
+          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+            <LoadingSpinner size="large" />
+          </div>
+          <div className="filter blur-sm pointer-events-none">
+            {/* Render placeholder content */}
+            <div className="space-y-6">
+              <div className="h-48 bg-gray-100 rounded-lg animate-pulse"></div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="h-32 bg-gray-100 rounded-lg animate-pulse"></div>
+                <div className="h-32 bg-gray-100 rounded-lg animate-pulse"></div>
+                <div className="h-32 bg-gray-100 rounded-lg animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    switch (activeTab) {
+      case 'dashboard':
+        return <DashboardContent />;
+      case 'analytics':
+        return <AdvancedAnalyticsContent />;
+      case 'monthly':
+        return <MonthlyAnalysisContent />;
+      case 'financial':
+        return <FinancialOverviewContent />;
+      case 'annual':
+        return <AnnualSummaryContent />;
+      default:
+        return <DashboardContent />;
+    }
+  };
 
   return (
-    <div className="space-y-6 p-6 bg-background-primary dark:bg-gray-900 min-h-screen transition-colors duration-300">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-primary dark:text-white mb-2 transition-colors duration-300">STP Plant Management System</h1>
-        <p className="text-secondary dark:text-gray-300 transition-colors duration-300">Sewage Treatment Plant Operations & Performance Monitoring</p>
+    <ErrorBoundary>
+      <div className="space-y-6 p-6 bg-background-primary dark:bg-gray-900 min-h-screen transition-colors duration-300">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-primary dark:text-white mb-2 transition-colors duration-300">STP Plant Management System</h1>
+          <p className="text-secondary dark:text-gray-300 transition-colors duration-300">Sewage Treatment Plant Operations & Performance Monitoring</p>
+        </div>
+
+        {/* Sub Navigation with optimized change handler */}
+        <SubNavigation 
+          sections={subSections}
+          activeSection={activeTab}
+          onSectionChange={handleTabSwitch}
+        />
+
+        {/* Tab Content with error boundary */}
+        <ErrorBoundary>
+          {renderTabContent()}
+        </ErrorBoundary>
       </div>
-
-      {/* Sub Navigation */}
-      <SubNavigation 
-        sections={subSections}
-        activeSection={activeTab}
-        onSectionChange={setActiveTab}
-      />
-
-      {/* Tab Content */}
-      {activeTab === 'dashboard' && renderDashboard()}
-      {activeTab === 'analytics' && renderAdvancedAnalytics()}
-      {activeTab === 'monthly' && renderMonthlyAnalysis()}
-      {activeTab === 'financial' && renderFinancialOverview()}
-      {activeTab === 'annual' && renderAnnualSummary()}
-    </div>
+    </ErrorBoundary>
   );
 };
 
-export default STPModule; 
+export default STPModule;

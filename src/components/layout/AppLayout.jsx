@@ -42,12 +42,26 @@ const AppLayout = ({ children }) => {
   useEffect(() => {
     if (isMobile && sidebarOpen) {
       document.body.style.overflow = 'hidden';
+      // Prevent background scrolling on iOS
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.top = `-${window.scrollY}px`;
     } else {
+      const scrollY = document.body.style.top;
       document.body.style.overflow = 'unset';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      }
     }
 
     return () => {
       document.body.style.overflow = 'unset';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
     };
   }, [isMobile, sidebarOpen]);
 
@@ -114,19 +128,31 @@ const AppLayout = ({ children }) => {
             paddingTop: isMobile ? '56px' : '64px' // Account for header height
           }}
         >
-          <div className="page-container">
-            <Breadcrumbs />
-            {children}
+          <div className="page-container px-3 sm:px-4 md:px-6 py-4 sm:py-6">
+            {/* Breadcrumbs - Only show on larger screens to save space */}
+            <div className="hidden sm:block">
+              <Breadcrumbs />
+            </div>
+            
+            {/* Main Content */}
+            <div className="content-wrapper">
+              {children}
+            </div>
           </div>
         </main>
       </div>
       
-      {/* Mobile Sidebar Overlay */}
+      {/* Mobile Sidebar Overlay - Enhanced for better UX */}
       {sidebarOpen && isMobile && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden transition-opacity duration-300"
           onClick={() => setSidebarOpen(false)}
-          style={{ touchAction: 'none' }}
+          style={{ 
+            touchAction: 'none',
+            WebkitTouchCallout: 'none',
+            WebkitUserSelect: 'none',
+            userSelect: 'none'
+          }}
         />
       )}
     </div>
@@ -134,4 +160,3 @@ const AppLayout = ({ children }) => {
 };
 
 export default AppLayout;
-
