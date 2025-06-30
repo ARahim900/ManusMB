@@ -29,7 +29,7 @@
 - [ ] Implement state management (Zustand or Redux Toolkit).
 - [ ] Implement data fetching (TanStack Query).
 - [ ] Implement form handling (React Hook Form with Zod validation).
-- [ ] Implement authentication (NextAuth.js or Clerk - *Note: This might require user interaction for setup*).
+
 - [ ] Implement PWA support.
 - [ ] Implement accessibility features.
 - [ ] Implement internationalization (if required by user).
