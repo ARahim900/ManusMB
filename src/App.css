@@ -97,7 +97,7 @@
   --border-color: #374151;
 }
 
-/* Base styles */
+/* Base styles with improved mobile support */
 * {
   box-sizing: border-box;
 }
@@ -108,6 +108,10 @@ html, body {
   height: 100%;
   width: 100%;
   overflow-x: hidden;
+  /* Better text rendering on mobile */
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
@@ -116,11 +120,40 @@ body {
   color: var(--text-primary);
   line-height: 1.5;
   transition: background-color 0.3s ease, color 0.3s ease;
+  /* Prevent bounce scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
 }
 
 #root {
   min-height: 100vh;
   width: 100%;
+}
+
+/* Enhanced Mobile-First Header Styles */
+.header {
+  /* Fixed height to prevent layout shifts */
+  height: 64px !important;
+  /* Ensure proper stacking */
+  position: relative;
+  z-index: 30;
+  /* Prevent content overflow */
+  min-width: 0;
+  /* Better mobile touch targets */
+  touch-action: manipulation;
+}
+
+/* Mobile-optimized button sizes for better touch targets */
+@media (max-width: 767px) {
+  .header button {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px;
+  }
+  
+  .header {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
 }
 
 /* Standardized Typography Classes */
@@ -188,12 +221,23 @@ body {
   color: var(--text-primary);
 }
 
-/* Standardized Layout Classes */
+/* Enhanced Mobile-First Layout Classes */
 .page-container {
   min-height: 100vh;
   padding: var(--container-padding);
   max-width: var(--container-max-width);
   margin: 0 auto;
+  /* Better mobile spacing */
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+@media (max-width: 640px) {
+  .page-container {
+    padding: 12px;
+    padding-top: 12px;
+    padding-bottom: 20px;
+  }
 }
 
 .page-header {
@@ -252,7 +296,7 @@ body {
   }
 }
 
-/* Sidebar Styles */
+/* Enhanced Sidebar Styles with better mobile support */
 .sidebar {
   background: var(--sidebar-background);
   color: var(--sidebar-text);
@@ -261,6 +305,9 @@ body {
   z-index: 10;
   height: 100vh;
   min-height: 100vh;
+  /* Better mobile scrolling */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .sidebar-nav-item {
@@ -269,6 +316,10 @@ body {
   position: relative;
   overflow: hidden;
   border-radius: var(--border-radius);
+  /* Better mobile touch targets */
+  min-height: 48px;
+  display: flex;
+  align-items: center;
 }
 
 .sidebar-nav-item:hover {
@@ -284,10 +335,12 @@ body {
   box-shadow: var(--box-shadow);
 }
 
-/* App Layout */
+/* Enhanced App Layout with better mobile positioning */
 .app-layout {
   min-height: 100vh;
   background-color: var(--background-primary);
+  /* Prevent horizontal scroll on mobile */
+  overflow-x: hidden;
 }
 
 .content-area {
@@ -296,7 +349,7 @@ body {
   padding: var(--spacing-lg);
 }
 
-/* Sidebar Layout Support */
+/* Improved Sidebar Layout Support with mobile optimizations */
 .sidebar-container {
   position: fixed !important;
   top: 0 !important;
@@ -307,6 +360,9 @@ body {
   max-height: 100vh !important;
   z-index: 30 !important;
   overflow-y: auto !important;
+  /* Better mobile scrolling */
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain !important;
 }
 
 .sidebar-mobile {
@@ -314,6 +370,9 @@ body {
   height: 100vh !important;
   max-height: 100vh !important;
   overflow-y: auto !important;
+  /* Prevent background scroll on mobile */
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
 }
 
 .main-content-with-sidebar {
@@ -336,7 +395,7 @@ body {
   }
 }
 
-/* Standardized Component Styles */
+/* Enhanced Component Styles with mobile optimizations */
 .kpi-card {
   background: var(--background-secondary);
   border-radius: var(--border-radius);
@@ -348,11 +407,21 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  /* Better mobile touch feedback */
+  -webkit-tap-highlight-color: transparent;
 }
 
 .kpi-card:hover {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
+}
+
+/* Mobile-specific card adjustments */
+@media (max-width: 640px) {
+  .kpi-card {
+    padding: 16px;
+    min-height: 120px;
+  }
 }
 
 .kpi-card.primary {
@@ -376,12 +445,19 @@ body {
   line-height: 1.2;
 }
 
+/* Mobile responsive card values */
+@media (max-width: 640px) {
+  .kpi-card-value {
+    font-size: 1.75rem;
+  }
+}
+
 .kpi-card.primary .kpi-card-title,
 .kpi-card.primary .kpi-card-value {
   color: var(--kpi-primary-text);
 }
 
-/* Standardized Button Styles */
+/* Enhanced Button Styles with mobile touch optimization */
 .btn {
   font-family: 'Inter', sans-serif;
   font-size: 0.875rem;
@@ -399,6 +475,9 @@ body {
   box-shadow: var(--box-shadow);
   min-height: 44px;
   white-space: nowrap;
+  /* Better mobile touch */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .btn-primary {
@@ -463,7 +542,7 @@ body {
   color: var(--text-secondary);
 }
 
-/* Table Styles */
+/* Enhanced Table Styles with mobile responsiveness */
 .data-table {
   width: 100%;
   border-collapse: collapse;
@@ -472,6 +551,9 @@ body {
   overflow: hidden;
   box-shadow: var(--box-shadow);
   transition: background-color 0.3s ease;
+  /* Better mobile scrolling */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .data-table th {
@@ -483,6 +565,7 @@ body {
   color: var(--text-primary);
   border-bottom: 1px solid var(--border-color);
   transition: background-color 0.3s ease;
+  white-space: nowrap;
 }
 
 .data-table td {
@@ -490,6 +573,15 @@ body {
   font-size: 0.875rem;
   color: var(--text-primary);
   border-bottom: 1px solid #f1f3f4;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .data-table th,
+  .data-table td {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
 }
 
 .data-table tr:hover {
@@ -500,6 +592,9 @@ body {
 .tab-nav {
   border-bottom: 1px solid var(--border-color);
   margin-bottom: var(--content-spacing);
+  /* Mobile horizontal scroll */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tab-nav button {
@@ -513,6 +608,9 @@ body {
   border-bottom: 2px solid transparent;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
+  min-height: 44px;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .tab-nav button:hover {
@@ -524,7 +622,7 @@ body {
   border-bottom-color: var(--text-primary);
 }
 
-/* Filter Controls */
+/* Enhanced Filter Controls with mobile optimization */
 .filter-controls {
   background: white;
   padding: var(--spacing-lg);
@@ -535,6 +633,15 @@ body {
   flex-wrap: wrap;
   gap: var(--spacing-md);
   align-items: center;
+}
+
+@media (max-width: 640px) {
+  .filter-controls {
+    padding: 12px;
+    gap: 12px;
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 .filter-control {
@@ -559,6 +666,9 @@ body {
   border-radius: 8px;
   background: white;
   color: var(--text-primary);
+  min-height: 44px;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .filter-select:focus,
@@ -581,7 +691,7 @@ body {
   box-shadow: var(--box-shadow);
 }
 
-/* Responsive Design */
+/* Enhanced Responsive Design with mobile-first approach */
 @media (max-width: 767px) {
   .page-container {
     padding: var(--spacing-md);
@@ -593,6 +703,7 @@ body {
   
   .metrics-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
   
   .kpi-card {
@@ -630,6 +741,17 @@ body {
   
   .content-area {
     padding: var(--spacing-md);
+  }
+  
+  /* Prevent zoom on input focus on iOS */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  select,
+  textarea {
+    font-size: 16px;
   }
 }
 
@@ -684,3 +806,30 @@ a:focus-visible {
   }
 }
 
+/* Additional mobile-specific improvements */
+@media (max-width: 480px) {
+  .header {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  
+  .page-container {
+    padding: 8px;
+    padding-top: 12px;
+  }
+  
+  .kpi-card {
+    padding: 12px;
+  }
+  
+  .chart-card {
+    padding: 16px;
+  }
+}
+
+/* Improve viewport height on mobile browsers */
+@supports (-webkit-touch-callout: none) {
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
+}
