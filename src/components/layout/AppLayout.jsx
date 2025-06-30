@@ -42,12 +42,26 @@ const AppLayout = ({ children }) => {
   useEffect(() => {
     if (isMobile && sidebarOpen) {
       document.body.style.overflow = 'hidden';
+      // Prevent background scrolling on iOS
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.top = `-${window.scrollY}px`;
     } else {
+      const scrollY = document.body.style.top;
       document.body.style.overflow = 'unset';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      }
     }
 
     return () => {
       document.body.style.overflow = 'unset';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
     };
   }, [isMobile, sidebarOpen]);
 
@@ -98,30 +112,44 @@ const AppLayout = ({ children }) => {
       {/* Main Content */}
       <div className={`transition-all duration-300 ease-in-out ${
         isMobile ? 'ml-0' : sidebarCollapsed && !isHoveringCollapsed ? 'ml-20' : 'ml-72'
-      }`} style={{ minHeight: '100vh' }}>
-        {/* Top Header */}
-        <TopHeader 
-          onMenuClick={() => setSidebarOpen(true)}
-          sidebarCollapsed={sidebarCollapsed}
-          onToggleCollapse={handleToggleCollapse}
-          isMobile={isMobile}
-        />
+      }`}>
+        {/* Top Header - Fixed position for better mobile experience */}
+        <div className="sticky top-0 z-30 bg-background-secondary dark:bg-gray-800">
+          <TopHeader 
+            onMenuClick={() => setSidebarOpen(true)}
+            sidebarCollapsed={sidebarCollapsed}
+            onToggleCollapse={handleToggleCollapse}
+            isMobile={isMobile}
+          />
+        </div>
         
-        {/* Content Area */}
-        <main className="overflow-auto content-area bg-background-primary dark:bg-gray-900 transition-colors duration-300" style={{ minHeight: 'calc(100vh - 64px)' }}>
-          <div className="page-container">
-            <Breadcrumbs />
-            {children}
+        {/* Content Area - Improved mobile padding and spacing */}
+        <main className="bg-background-primary dark:bg-gray-900 transition-colors duration-300 min-h-[calc(100vh-4rem)]">
+          <div className="page-container px-3 sm:px-4 md:px-6 py-4 sm:py-6">
+            {/* Breadcrumbs - Only show on larger screens to save space */}
+            <div className="hidden sm:block">
+              <Breadcrumbs />
+            </div>
+            
+            {/* Main Content */}
+            <div className="content-wrapper">
+              {children}
+            </div>
           </div>
         </main>
       </div>
       
-      {/* Mobile Sidebar Overlay */}
+      {/* Mobile Sidebar Overlay - Enhanced for better UX */}
       {sidebarOpen && isMobile && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden transition-opacity duration-300"
           onClick={() => setSidebarOpen(false)}
-          style={{ touchAction: 'none' }}
+          style={{ 
+            touchAction: 'none',
+            WebkitTouchCallout: 'none',
+            WebkitUserSelect: 'none',
+            userSelect: 'none'
+          }}
         />
       )}
     </div>
@@ -129,4 +157,3 @@ const AppLayout = ({ children }) => {
 };
 
 export default AppLayout;
-
