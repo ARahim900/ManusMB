@@ -276,11 +276,11 @@ Total System Loss: Overall water loss calculation with efficiency metrics
 
   // Define sub-navigation sections
   const subSections = [
-    { name: 'Overview', id: 'Overview', icon: LayoutDashboard, shortName: 'Overview' },
+    { name: 'Overview', id: 'Overview', icon: LayoutDashboard, shortName: 'Home' },
     { name: 'Water Loss Analysis', id: 'WaterLoss', icon: TrendingUp, shortName: 'Loss' },
     { name: 'Zone Analysis', id: 'ZoneAnalysis', icon: BarChart2, shortName: 'Zones' },
     { name: 'Zone Details', id: 'ZoneDetails', icon: Database, shortName: 'Details' },
-    { name: 'Main Database', id: 'MainDatabase', icon: Database, shortName: 'Database' },
+    { name: 'Main Database', id: 'MainDatabase', icon: Database, shortName: 'Data' },
   ];
 
   return (
@@ -291,14 +291,12 @@ Total System Loss: Overall water loss calculation with efficiency metrics
         <p className="text-sm sm:text-base text-secondary dark:text-gray-300 transition-colors duration-300">Real Hierarchical Water Distribution Monitoring & Loss Analysis</p>
       </div>
 
-      {/* Sub Navigation - with mobile scroll */}
-      <div className="overflow-x-auto -mx-6 px-6 mb-6">
-        <SubNavigation 
-          sections={subSections}
-          activeSection={activeWaterSubSection}
-          onSectionChange={setActiveWaterSubSection}
-        />
-      </div>
+      {/* Sub Navigation */}
+      <SubNavigation 
+        sections={subSections}
+        activeSection={activeWaterSubSection}
+        onSectionChange={setActiveWaterSubSection}
+      />
 
       {activeWaterSubSection === 'Overview' && (
         <>

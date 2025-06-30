@@ -207,12 +207,12 @@ export default function HVACModule() {
 
     // Define sub-navigation sections
     const subSections = [
-      { name: 'Dashboard', id: 'dashboard', icon: LayoutDashboard },
-      { name: 'PPM Records', id: 'records', icon: Database },
-      { name: 'Analytics', id: 'analytics', icon: BarChart3 },
-      { name: 'Maintenance', id: 'maintenance', icon: Settings },
-      { name: 'Issues', id: 'issues', icon: AlertTriangle },
-      { name: 'Reports', id: 'reports', icon: FileText }
+      { name: 'Dashboard', id: 'dashboard', icon: LayoutDashboard, shortName: 'Home' },
+      { name: 'PPM Records', id: 'records', icon: Database, shortName: 'Records' },
+      { name: 'Analytics', id: 'analytics', icon: BarChart3, shortName: 'Analytics' },
+      { name: 'Maintenance', id: 'maintenance', icon: Settings, shortName: 'Maint' },
+      { name: 'Issues', id: 'issues', icon: AlertTriangle, shortName: 'Issues' },
+      { name: 'Reports', id: 'reports', icon: FileText, shortName: 'Reports' }
     ];
 
     const STORAGE_KEY = 'hvac-ppm-tracker-data';

@@ -335,11 +335,11 @@ const STPModule = () => {
 
   // Define tabs for navigation with updated structure for SubNavigation
   const subSections = useMemo(() => [
-    { id: 'dashboard', name: 'Dashboard', icon: Factory },
-    { id: 'analytics', name: 'Advanced Analytics', icon: BarChart3 },
-    { id: 'monthly', name: 'Monthly Analysis', icon: Calendar },
-    { id: 'financial', name: 'Financial Overview', icon: DollarSign },
-    { id: 'annual', name: 'Annual Summary', icon: Target }
+    { id: 'dashboard', name: 'Dashboard', icon: Factory, shortName: 'Home' },
+    { id: 'analytics', name: 'Advanced Analytics', icon: BarChart3, shortName: 'Analytics' },
+    { id: 'monthly', name: 'Monthly Analysis', icon: Calendar, shortName: 'Monthly' },
+    { id: 'financial', name: 'Financial Overview', icon: DollarSign, shortName: 'Finance' },
+    { id: 'annual', name: 'Annual Summary', icon: Target, shortName: 'Annual' }
   ], []);
 
   // Loading state

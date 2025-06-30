@@ -250,11 +250,11 @@ const ReserveFundModule = () => {
 
   // Define sub-navigation sections with updated structure
   const subSections = [
-    { id: 'overview', name: 'Overview', icon: LayoutDashboard },
-    { id: 'sectors', name: 'Sector Analysis', icon: Building2 },
-    { id: 'units', name: 'Unit Analysis', icon: Home },
-    { id: 'trends', name: 'Trends & Forecast', icon: TrendingUp },
-    { id: 'data-quality', name: 'Data Quality', icon: AlertTriangle }
+    { id: 'overview', name: 'Overview', icon: LayoutDashboard, shortName: 'Home' },
+    { id: 'sectors', name: 'Sector Analysis', icon: Building2, shortName: 'Sectors' },
+    { id: 'units', name: 'Unit Analysis', icon: Home, shortName: 'Units' },
+    { id: 'trends', name: 'Trends & Forecast', icon: TrendingUp, shortName: 'Trends' },
+    { id: 'data-quality', name: 'Data Quality', icon: AlertTriangle, shortName: 'Quality' }
   ];
 
   return (

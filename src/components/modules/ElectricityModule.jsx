@@ -76,12 +76,12 @@ export default function ElectricityModule() {
 
   // Define sub-navigation sections
   const subSections = [
-    { name: 'Overview', id: 'overview', icon: LayoutDashboard },
-    { name: 'Analytics', id: 'analytics', icon: BarChart3 },
-    { name: 'Consumption Analysis', id: 'consumption', icon: TrendingUp },
-    { name: 'Cost Analysis', id: 'cost', icon: DollarSign },
-    { name: 'Data Table', id: 'table', icon: Database },
-    { name: 'Reports', id: 'reports', icon: FileText }
+    { name: 'Overview', id: 'overview', icon: LayoutDashboard, shortName: 'Home' },
+    { name: 'Analytics', id: 'analytics', icon: BarChart3, shortName: 'Analytics' },
+    { name: 'Consumption Analysis', id: 'consumption', icon: TrendingUp, shortName: 'Usage' },
+    { name: 'Cost Analysis', id: 'cost', icon: DollarSign, shortName: 'Cost' },
+    { name: 'Data Table', id: 'table', icon: Database, shortName: 'Table' },
+    { name: 'Reports', id: 'reports', icon: FileText, shortName: 'Reports' }
   ];
 
   // Get unique types and months

@@ -389,10 +389,10 @@ const ContractorModule = () => {
 
   // Define sub-navigation sections
   const subSections = [
-    { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
-    { id: 'contracts', name: 'Contract Management', icon: FileText },
-    { id: 'performance', name: 'Performance Reviews', icon: TrendingUp },
-    { id: 'compliance', name: 'Compliance & Documents', icon: Shield }
+    { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard, shortName: 'Home' },
+    { id: 'contracts', name: 'Contract Management', icon: FileText, shortName: 'Contracts' },
+    { id: 'performance', name: 'Performance Reviews', icon: TrendingUp, shortName: 'Reviews' },
+    { id: 'compliance', name: 'Compliance & Documents', icon: Shield, shortName: 'Docs' }
   ];
 
   const getStatusColor = (status) => {
