@@ -809,6 +809,7 @@ const STPModule = () => {
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
         <div className="px-4 py-3 border-b bg-gray-50">
           <h3 className="text-lg font-semibold text-gray-900">Monthly Performance Summary</h3>
+          <p className="text-sm text-gray-600 mt-1">Detailed breakdown of operational and financial performance</p>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -821,7 +822,24 @@ const STPModule = () => {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TSE (m³)</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Efficiency (%)</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tankers</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Financial Benefit (OMR)</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <div className="flex flex-col">
+                    <span>Tanker Income</span>
+                    <span className="text-xs font-normal text-gray-400">(4.5 OMR/trip)</span>
+                  </div>
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <div className="flex flex-col">
+                    <span>TSE Water Savings</span>
+                    <span className="text-xs font-normal text-gray-400">(1.32 OMR/m³)</span>
+                  </div>
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <div className="flex flex-col">
+                    <span>Total Financial Benefit</span>
+                    <span className="text-xs font-normal text-gray-400">(OMR)</span>
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -841,20 +859,152 @@ const STPModule = () => {
                       </span>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{month.totalTankers || 0}</td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
-                      {(month.totalFinancialBenefit || 0).toLocaleString()}
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div className="flex flex-col">
+                        <span className="font-medium text-purple-600">
+                          {(month.tankerIncome || 0).toLocaleString()}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          ({month.totalTankers || 0} trips)
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div className="flex flex-col">
+                        <span className="font-medium text-blue-600">
+                          {(month.tseWaterSavings || 0).toLocaleString()}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          ({(month.totalTSEWater || 0).toLocaleString()} m³)
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <span className="font-bold text-green-600">
+                        {(month.totalFinancialBenefit || 0).toLocaleString()}
+                      </span>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan="10" className="px-4 py-8 text-center text-gray-500">
                     No data available
                   </td>
                 </tr>
               )}
             </tbody>
+            {/* Summary Row */}
+            {monthlyPerformanceData && monthlyPerformanceData.length > 0 && (
+              <tfoot className="bg-gray-100 border-t-2 border-gray-300">
+                <tr className="font-semibold">
+                  <td className="px-4 py-4 text-sm text-gray-900">TOTAL</td>
+                  <td className="px-4 py-4 text-sm text-gray-900">
+                    {monthlyPerformanceData.reduce((sum, month) => sum + (month.operatingDays || 0), 0)}
+                  </td>
+                  <td className="px-4 py-4 text-sm text-gray-900">
+                    {monthlyPerformanceData.reduce((sum, month) => sum + (month.totalProcessedWater || 0), 0).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-4 text-sm text-gray-900">
+                    {monthlyPerformanceData.reduce((sum, month) => sum + (month.totalTreatedWater || 0), 0).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-4 text-sm text-gray-900">
+                    {monthlyPerformanceData.reduce((sum, month) => sum + (month.totalTSEWater || 0), 0).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-4 text-sm text-gray-900">
+                    {(monthlyPerformanceData.reduce((sum, month) => sum + (month.treatmentEfficiency || 0), 0) / monthlyPerformanceData.length).toFixed(1)}%
+                  </td>
+                  <td className="px-4 py-4 text-sm text-gray-900">
+                    {monthlyPerformanceData.reduce((sum, month) => sum + (month.totalTankers || 0), 0).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-4 text-sm text-purple-600 font-bold">
+                    {monthlyPerformanceData.reduce((sum, month) => sum + (month.tankerIncome || 0), 0).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-4 text-sm text-blue-600 font-bold">
+                    {monthlyPerformanceData.reduce((sum, month) => sum + (month.tseWaterSavings || 0), 0).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-4 text-sm text-green-600 font-bold">
+                    {monthlyPerformanceData.reduce((sum, month) => sum + (month.totalFinancialBenefit || 0), 0).toLocaleString()}
+                  </td>
+                </tr>
+              </tfoot>
+            )}
           </table>
+        </div>
+        
+        {/* Financial Breakdown Summary Cards */}
+        <div className="px-4 py-4 bg-gray-50 border-t">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white rounded-lg p-4 border border-purple-200">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                    <svg className="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-purple-600">Tanker Operations</p>
+                  <div className="flex items-baseline">
+                    <p className="text-xl font-bold text-gray-900">
+                      {monthlyPerformanceData ? monthlyPerformanceData.reduce((sum, month) => sum + (month.tankerIncome || 0), 0).toLocaleString() : '0'} OMR
+                    </p>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    {monthlyPerformanceData ? Math.round((monthlyPerformanceData.reduce((sum, month) => sum + (month.tankerIncome || 0), 0) / monthlyPerformanceData.reduce((sum, month) => sum + (month.totalFinancialBenefit || 0), 0)) * 100) : 0}% of total income
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg p-4 border border-blue-200">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-blue-600">TSE Water Generation</p>
+                  <div className="flex items-baseline">
+                    <p className="text-xl font-bold text-gray-900">
+                      {monthlyPerformanceData ? monthlyPerformanceData.reduce((sum, month) => sum + (month.tseWaterSavings || 0), 0).toLocaleString() : '0'} OMR
+                    </p>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    {monthlyPerformanceData ? Math.round((monthlyPerformanceData.reduce((sum, month) => sum + (month.tseWaterSavings || 0), 0) / monthlyPerformanceData.reduce((sum, month) => sum + (month.totalFinancialBenefit || 0), 0)) * 100) : 0}% of total income
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg p-4 border border-green-200">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-green-600">Total Financial Benefit</p>
+                  <div className="flex items-baseline">
+                    <p className="text-xl font-bold text-gray-900">
+                      {monthlyPerformanceData ? monthlyPerformanceData.reduce((sum, month) => sum + (month.totalFinancialBenefit || 0), 0).toLocaleString() : '0'} OMR
+                    </p>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Combined revenue streams
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
