@@ -121,11 +121,12 @@ const AppLayout = ({ children }) => {
           isMobile={isMobile}
         />
         
-        {/* Content Area with proper padding for fixed header */}
-        <main className="overflow-auto content-area bg-background-primary dark:bg-gray-900 transition-colors duration-300 pt-14 sm:pt-16" 
+        {/* Content Area with dynamic padding for header */}
+        <main className="overflow-auto content-area bg-background-primary dark:bg-gray-900 transition-colors duration-300" 
           style={{ 
             minHeight: '100vh',
-            paddingTop: isMobile ? '56px' : '64px' // Account for header height
+            // Dynamic padding top based on device and navigation height
+            paddingTop: isMobile ? '80px' : '90px' // Adjusted for new navigation
           }}
         >
           <div className="page-container px-3 sm:px-4 md:px-6 py-4 sm:py-6">
